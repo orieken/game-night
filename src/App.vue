@@ -1,34 +1,30 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100">
-    <!-- Left Column for Games List -->
-    <div class="w-1/4 bg-white shadow">
-      <div class="sticky top-0 p-4 bg-white">
-        <router-link to="/games" class="text-blue-500 hover:text-blue-700">All Games</router-link>
-        <h1 class="text-xl font-bold text-gray-900 mt-2">Board Games</h1>
-      </div>
-      <ul class="overflow-auto h-screen">
-        <li v-for="game in games" :key="game.id">
-          <router-link
-              :to="`/games/${game.id}`"
-              class="block p-4 hover:bg-gray-50 transition-colors"
-          >
-            {{ game.name }}
-          </router-link>
-        </li>
-      </ul>
+  <div>
+    <!-- Sticky Navbar -->
+    <div class="bg-gray-800 text-white p-4 sticky top-0 z-50">
+      <router-link to="/games" class="mr-6 hover:text-gray-300">Games</router-link>
+      <router-link to="/add-game" class="mr-6 hover:text-gray-300 btn">Add Game</router-link>
+      <router-link to="/users" class="mr-6 hover:text-gray-300">Users</router-link>
+      <router-link to="/add-user" class="mr-6 hover:text-gray-300 btn">Add User</router-link>
     </div>
 
-    <!-- Right Column for Game Details -->
-    <div class="w-3/4 p-10 overflow-auto">
-      <router-view/>
+    <!-- Main Content Area -->
+    <div class="flex min-h-screen">
+      <div class="w-1/3 bg-white p-4 overflow-auto">
+        <router-view name="list" />
+      </div>
+      <div class="w-2/3 bg-gray-100 p-4 overflow-auto">
+        <router-view name="details" />
+      </div>
     </div>
   </div>
 </template>
 
 
+
 <script setup>
 import { onMounted, reactive } from 'vue';
-import Games from './Games.vue';
+import Games from './game/GamesList.vue';
 
 const games = reactive([]);
 const currentGame = reactive({
