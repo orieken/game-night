@@ -25,6 +25,10 @@
 
 <script setup>
 import { reactive } from 'vue';
+import { useGamesStore } from '../stores/games';
+
+
+const gamesStore = useGamesStore();
 
 const game = reactive({
   name: '',
@@ -34,8 +38,10 @@ const game = reactive({
 function addGame() {
   // Assume a method to add a game to your store or API
   console.log('Adding game:', game);
+  gamesStore.addGame({...game});
   // Reset form
   game.name = '';
   game.details = '';
 }
+
 </script>

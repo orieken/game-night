@@ -1,22 +1,11 @@
-type Winner = {
-  user: User;
-  date: Date;
+export type Winner = {
+  name: string;
+  date: string; // Date
 };
 
-class Game {
+export type Game = {
   id: number;
   name: string;
   details: string;
   winners: Winner[];
-
-  constructor(id: number, name: string, details: string) {
-    this.id = id;
-    this.name = name;
-    this.details = details;
-    this.winners = [];
-  }
-
-  addWinner(user: User, date: Date): void {
-    this.winners.push({ user, date });
-  }
 }
