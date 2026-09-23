@@ -1,0 +1,23 @@
+export const E2E_USER = {
+  email: 'host@example.com',
+  password: 'playwright123!',
+  displayName: 'Test Host'
+} as const
+
+export const E2E_GUEST = {
+  email: 'guest@example.com',
+  password: 'playwright123!',
+  displayName: 'Test Guest'
+} as const
+
+export const E2E_GAME = {
+  id: 'azul',
+  name: 'Azul'
+} as const
+
+export const E2E_RSVP_EVENTS = {
+  public: 'rsvp-public',
+  full: 'rsvp-full',
+  invitedPrivate: 'rsvp-private-invited',
+  uninvitedPrivate: 'rsvp-private-uninvited'
+} as const

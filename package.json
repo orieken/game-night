@@ -1,32 +1,48 @@
 {
-  "name": "dashboard",
-  "version": "1.0.0",
+  "name": "game-night-tracker",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "build": "NODE_ENV=production rspack build",
-    "build:dev": "NODE_ENV=development rspack build",
-    "build:start": "cd dist && rspack serve",
-    "start": "NODE_ENV=development rspack serve"
-  },
-  "license": "MIT",
-  "author": {
-    "name": "Jack Herrington",
-    "email": "jherr@pobox.com"
-  },
-  "devDependencies": {
-    "@rspack/cli": "0.5.4",
-    "@rspack/core": "0.5.4",
-    "@rspack/plugin-react-refresh": "0.5.4",
-    "autoprefixer": "^10.1.0",
-    "postcss": "^8.2.1",
-    "postcss-loader": "^8.0.0",
-    "react-refresh": "^0.14.0",
-    "tailwindcss": "^3.4.1",
-    "vue-loader": "^16.8.1",
-    "vue-template-compiler": "^2.6.14"
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "test:unit": "vitest",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-game-night \"vitest --config vitest.rules.config.ts --run\"",
+    "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-game-night \"npm run test:e2e:playwright\"",
+    "test:e2e:headed": "firebase emulators:exec --only auth,firestore --project demo-game-night \"npm run test:e2e:playwright -- --headed\"",
+    "test:e2e:playwright": "playwright test --project=chromium",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
-    "pinia": "^2.1.7",
-    "vue": "^3.2.19",
-    "vue-router": "^4.4.0"
+    "@tailwindcss/postcss": "^4.1.18",
+    "autoprefixer": "^10.4.23",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.19.0",
+    "pinia": "^3.0.4",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.57.0",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.8.1",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-vue": "^10.6.2",
+    "firebase-tools": "^15.30.2",
+    "happy-dom": "^20.0.11",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.50.1",
+    "vite": "^7.2.4",
+    "vite-plugin-vue-devtools": "^8.0.5",
+    "vitest": "^4.0.16",
+    "vue-tsc": "^3.1.4"
   }
 }

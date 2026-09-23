@@ -1,0 +1,184 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(groupId) {
+      return signedIn() && exists(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid));
+    }
+
+    function isOrganizer(groupId) {
+      return isMember(groupId) && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role in ['owner', 'organizer'];
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn() && request.auth.uid == userId;
+      allow read: if signedIn();
+      allow update: if signedIn() && request.auth.uid == userId;
+      allow delete: if false;
+    }
+
+    // Collection-group membership lookup used to populate the active-table
+    // selector. Queries must constrain userId to the signed-in user.
+    match /{path=**}/members/{userId} {
+      allow list: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /groups/{groupId} {
+      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
+      // A personal group uses the owner's uid as its document id. Allowing the
+      // owner to get that one path lets first-run provisioning check whether it
+      // exists before the membership subdocument has been created.
+      allow get: if signedIn() && (groupId == request.auth.uid || isMember(groupId));
+      allow list: if isMember(groupId);
+      allow update, delete: if isOrganizer(groupId);
+
+      match /members/{userId} {
+        allow get: if isMember(groupId);
+        allow list: if isMember(groupId) || (signedIn() && resource.data.userId == request.auth.uid);
+        allow create: if request.resource.data.userId == userId && (
+          isOrganizer(groupId) || (
+            groupId == request.auth.uid &&
+            userId == request.auth.uid &&
+            request.resource.data.role == 'owner'
+          )
+        );
+        allow update: if isOrganizer(groupId) && request.resource.data.userId == userId;
+        allow delete: if isOrganizer(groupId);
+      }
+
+      match /games/{gameId} {
+        allow read: if isMember(groupId);
+        allow create, update, delete: if isOrganizer(groupId);
+      }
+
+      match /events/{eventId} {
+        function eventPath() {
+          return /databases/$(database)/documents/groups/$(groupId)/events/$(eventId);
+        }
+
+        function rsvpPath(userId) {
+          return /databases/$(database)/documents/groups/$(groupId)/events/$(eventId)/rsvps/$(userId);
+        }
+
+        function wasGoing(userId) {
+          return exists(rsvpPath(userId)) && get(rsvpPath(userId)).data.status == 'going';
+        }
+
+        function willBeGoing(userId) {
+          return existsAfter(rsvpPath(userId)) && getAfter(rsvpPath(userId)).data.status == 'going';
+        }
+
+        function attendanceDelta(userId) {
+          return (willBeGoing(userId) ? 1 : 0) - (wasGoing(userId) ? 1 : 0);
+        }
+
+        function validAttendanceCount(eventData) {
+          return eventData.attendeeCount >= 0 &&
+            (eventData.maxAttendees == null || eventData.attendeeCount <= eventData.maxAttendees);
+        }
+
+        function isHostUpdate() {
+          return isOrganizer(groupId) &&
+            resource.data.hostId == request.auth.uid &&
+            request.resource.data.hostId == resource.data.hostId &&
+            request.resource.data.attendeeCount == resource.data.get('attendeeCount', 0) &&
+            request.resource.data.invitedUserIds is list &&
+            request.resource.data.selectedGameIds is list &&
+            resource.data.status != 'cancelled';
+        }
+
+        function isOwnAttendanceUpdate() {
+          return isMember(groupId) &&
+            resource.data.status == 'upcoming' &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['attendeeCount', 'updatedAt']) &&
+            request.resource.data.attendeeCount == resource.data.get('attendeeCount', 0) + attendanceDelta(request.auth.uid) &&
+            validAttendanceCount(request.resource.data);
+        }
+
+        function validOwnRsvp(userId) {
+          let eventBefore = get(eventPath()).data;
+          let eventAfter = getAfter(eventPath()).data;
+          let nextCount = eventBefore.get('attendeeCount', 0) + attendanceDelta(userId);
+          return isMember(groupId) &&
+            userId == request.auth.uid &&
+            request.resource.data.userId == userId &&
+            request.resource.data.status in ['going', 'maybe', 'not_going'] &&
+            eventBefore.status == 'upcoming' &&
+            (eventBefore.isPublic || eventBefore.hostId == userId || userId in eventBefore.get('invitedUserIds', [])) &&
+            eventAfter.attendeeCount == nextCount &&
+            validAttendanceCount(eventAfter);
+        }
+
+        function isEventHost() {
+          return isOrganizer(groupId) && get(eventPath()).data.hostId == request.auth.uid;
+        }
+
+        function sessionPath(sessionId) {
+          return /databases/$(database)/documents/groups/$(groupId)/events/$(eventId)/sessions/$(sessionId);
+        }
+
+        allow read: if isMember(groupId);
+        allow create: if isOrganizer(groupId) &&
+          request.resource.data.hostId == request.auth.uid &&
+          request.resource.data.attendeeCount == 0 &&
+          request.resource.data.invitedUserIds is list &&
+          request.resource.data.selectedGameIds is list &&
+          validAttendanceCount(request.resource.data);
+        allow update: if isHostUpdate() || isOwnAttendanceUpdate();
+        allow delete: if isOrganizer(groupId) && resource.data.hostId == request.auth.uid;
+
+        match /rsvps/{userId} {
+          allow read: if isMember(groupId);
+          allow create, update: if validOwnRsvp(userId);
+          allow delete: if false;
+        }
+
+        match /sessions/{sessionId} {
+          allow read: if isMember(groupId);
+          allow create: if isEventHost() &&
+            get(eventPath()).data.status == 'upcoming' &&
+            request.resource.data.createdBy == request.auth.uid &&
+            request.resource.data.gameId in get(eventPath()).data.selectedGameIds &&
+            request.resource.data.status == 'in_progress' &&
+            request.resource.data.completedAt == null &&
+            (request.resource.data.notes == null || request.resource.data.notes is string);
+          allow update: if isEventHost() &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completedAt', 'updatedAt']) &&
+            request.resource.data.createdBy == resource.data.createdBy &&
+            request.resource.data.gameId == resource.data.gameId &&
+            request.resource.data.status == 'completed' &&
+            request.resource.data.completedAt is timestamp &&
+            request.resource.data.updatedAt is timestamp &&
+            request.resource.data.updatedAt != resource.data.updatedAt;
+          allow delete: if isEventHost();
+
+          match /players/{userId} {
+            allow read: if isMember(groupId);
+            allow create: if isEventHost() &&
+              !exists(sessionPath(sessionId)) &&
+              exists(/databases/$(database)/documents/groups/$(groupId)/members/$(userId)) &&
+              request.resource.data.userId == userId &&
+              request.resource.data.placement == null &&
+              request.resource.data.score == null &&
+              request.resource.data.isWinner == false &&
+              getAfter(sessionPath(sessionId)).data.status == 'in_progress';
+            allow update: if isEventHost() &&
+              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['placement', 'score', 'isWinner']) &&
+              request.resource.data.userId == userId &&
+              request.resource.data.placement is int &&
+              request.resource.data.placement > 0 &&
+              (request.resource.data.score == null || request.resource.data.score is number) &&
+              request.resource.data.isWinner == (request.resource.data.placement == 1) &&
+              getAfter(sessionPath(sessionId)).data.status == 'completed' &&
+              getAfter(sessionPath(sessionId)).data.updatedAt != get(sessionPath(sessionId)).data.updatedAt;
+            allow delete: if isEventHost() && !existsAfter(sessionPath(sessionId));
+          }
+        }
+      }
+
+    }
+  }
+}
