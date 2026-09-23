@@ -38,6 +38,7 @@ export const gameNightRepository: IGameNightRepository = {
       invitedUserIds: gameNight.invitedUserIds,
       selectedGameIds: gameNight.selectedGameIds,
       attendeeCount: gameNight.attendeeCount,
+      rsvpInviteCode: gameNight.rsvpInviteCode ?? null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     })

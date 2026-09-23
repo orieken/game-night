@@ -6,7 +6,7 @@ import {
   initializeTestEnvironment,
   type RulesTestEnvironment
 } from '@firebase/rules-unit-testing'
-import { collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore'
+import { arrayUnion, collection, collectionGroup, deleteDoc, doc, getDoc, getDocs, query, setDoc, updateDoc, where, writeBatch } from 'firebase/firestore'
 import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 const projectId = 'demo-game-night'
@@ -73,6 +73,7 @@ async function seedEvent(groupId: string, eventId: string, overrides: Record<str
       selectedGameIds: [],
       attendeeCount: 0,
       maxAttendees: null,
+      rsvpInviteCode: null,
       createdAt: new Date(),
       updatedAt: new Date(),
       ...overrides
@@ -268,6 +269,67 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(uninvitedDatabase, 'groups', 'group-1', 'events', 'event-1', 'rsvps', 'uninvited-1'), {
       userId: 'uninvited-1', status: 'maybe', createdAt: new Date(), updatedAt: new Date()
     }))
+  })
+
+  it('lets a signed-in recipient join a private event with its RSVP link', async () => {
+    await seedGroup('group-1', 'owner-1')
+    await seedEvent('group-1', 'event-1', {
+      isPublic: false,
+      rsvpInviteCode: 'valid-secret-code'
+    })
+    await testEnvironment.withSecurityRulesDisabled(async (context) => {
+      await setDoc(doc(context.firestore(), 'eventInvites', 'valid-secret-code'), {
+        code: 'valid-secret-code',
+        groupId: 'group-1',
+        eventId: 'event-1',
+        eventName: 'Friday games',
+        eventDate: new Date(),
+        location: null,
+        active: true
+      })
+    })
+
+    const recipientDatabase = testEnvironment.authenticatedContext('recipient-1').firestore()
+    await assertSucceeds(getDoc(doc(recipientDatabase, 'eventInvites', 'valid-secret-code')))
+
+    const acceptBatch = writeBatch(recipientDatabase)
+    acceptBatch.set(doc(recipientDatabase, 'groups', 'group-1', 'members', 'recipient-1'), {
+      userId: 'recipient-1',
+      role: 'member',
+      displayName: 'Recipient',
+      avatarUrl: null,
+      inviteCode: 'valid-secret-code',
+      joinedAt: new Date()
+    })
+    acceptBatch.update(doc(recipientDatabase, 'groups', 'group-1'), {
+      memberIds: arrayUnion('recipient-1'),
+      updatedAt: new Date()
+    })
+    acceptBatch.update(doc(recipientDatabase, 'groups', 'group-1', 'events', 'event-1'), {
+      invitedUserIds: arrayUnion('recipient-1'),
+      updatedAt: new Date()
+    })
+    await assertSucceeds(acceptBatch.commit())
+    await assertSucceeds(getDoc(doc(recipientDatabase, 'groups', 'group-1', 'events', 'event-1')))
+
+    const attackerDatabase = testEnvironment.authenticatedContext('attacker-1').firestore()
+    const attackerBatch = writeBatch(attackerDatabase)
+    attackerBatch.set(doc(attackerDatabase, 'groups', 'group-1', 'members', 'attacker-1'), {
+      userId: 'attacker-1',
+      role: 'member',
+      displayName: 'Attacker',
+      avatarUrl: null,
+      inviteCode: 'wrong-code',
+      joinedAt: new Date()
+    })
+    attackerBatch.update(doc(attackerDatabase, 'groups', 'group-1'), {
+      memberIds: arrayUnion('attacker-1'),
+      updatedAt: new Date()
+    })
+    await assertFails(attackerBatch.commit())
+
+    const anonymousDatabase = testEnvironment.unauthenticatedContext().firestore()
+    await assertFails(getDoc(doc(anonymousDatabase, 'eventInvites', 'valid-secret-code')))
   })
 
   it('lets only the event host manage sessions and completed results', async () => {

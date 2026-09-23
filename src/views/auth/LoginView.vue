@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import AppInput from '@/components/common/AppInput.vue'
 import AppButton from '@/components/common/AppButton.vue'
@@ -9,14 +9,18 @@ const email = ref('')
 const password = ref('')
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+const redirectTarget = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+  ? route.query.redirect
+  : '/'
 
 async function handleLogin() {
   if (!email.value || !password.value) return
-  if (await authStore.login(email.value, password.value)) await router.replace('/')
+  if (await authStore.login(email.value, password.value)) await router.replace(redirectTarget)
 }
 
 async function handleGoogleLogin() {
-  if (await authStore.loginWithGoogle()) await router.replace('/')
+  if (await authStore.loginWithGoogle()) await router.replace(redirectTarget)
 }
 </script>
 
@@ -54,7 +58,7 @@ async function handleGoogleLogin() {
             <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.23c0-.71-.06-1.39-.18-2.05H12v3.88h5.24a4.48 4.48 0 0 1-1.94 2.94v2.51h3.15c1.84-1.7 2.9-4.2 2.9-7.28Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.83-.87 6.44-2.36l-3.15-2.51c-.87.58-1.98.93-3.29.93-2.53 0-4.68-1.71-5.45-4.01H3.3v2.59A9.73 9.73 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.55 13.8A5.85 5.85 0 0 1 6.24 12c0-.62.11-1.22.31-1.8V7.61H3.3A9.74 9.74 0 0 0 2.25 12c0 1.57.38 3.06 1.05 4.39l3.25-2.59Z"/><path fill="#EA4335" d="M12 6.19c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.82 3.28 14.62 2.25 12 2.25a9.73 9.73 0 0 0-8.7 5.36l3.25 2.59C7.32 7.9 9.47 6.19 12 6.19Z"/></svg>
             Continue with Google
           </button>
-          <p class="mt-6 text-center text-sm text-gray-400">Don't have an account? <router-link to="/register" class="font-medium text-[#57d2a4] hover:text-[#85e4c3]">Create one</router-link></p>
+          <p class="mt-6 text-center text-sm text-gray-400">Don't have an account? <router-link :to="{ path: '/register', query: route.query }" class="font-medium text-[#57d2a4] hover:text-[#85e4c3]">Create one</router-link></p>
         </div>
       </section>
     </div>

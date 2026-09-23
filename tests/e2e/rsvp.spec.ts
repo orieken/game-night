@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { loginAsGuest, loginAsHost } from './helpers'
-import { E2E_RSVP_EVENTS } from './seedData'
+import { E2E_GUEST, E2E_RSVP_EVENTS } from './seedData'
 
 function attendanceSection(page: Page) {
   return page.locator('section').filter({
@@ -63,4 +63,35 @@ test('hides RSVP controls from an uninvited member of a private event', async ({
   const attendance = attendanceSection(page)
   await expect(attendance.getByText('This is an invitation-only event.')).toBeVisible()
   await expect(attendance.getByLabel('RSVP options')).toHaveCount(0)
+})
+
+test('lets a guest join and RSVP from a private share link', async ({ page, browser }) => {
+  await loginAsHost(page)
+  await page.goto(`/game-nights/${E2E_RSVP_EVENTS.uninvitedPrivate}`)
+
+  const sharing = page.locator('section').filter({
+    has: page.getByRole('heading', { name: 'Share an RSVP link' })
+  })
+  await sharing.getByRole('button', { name: 'Create RSVP link' }).click()
+  await expect(page.getByText('RSVP link ready to share.')).toBeVisible()
+  const inviteUrl = await sharing.getByLabel('RSVP link').inputValue()
+  expect(inviteUrl).toContain('/invite/')
+
+  const guestContext = await browser.newContext()
+  const guestPage = await guestContext.newPage()
+  await guestPage.goto(inviteUrl)
+  await expect(guestPage).toHaveURL(/\/login\?redirect=/)
+  await guestPage.getByLabel('Email').fill(E2E_GUEST.email)
+  await guestPage.getByLabel('Password').fill(E2E_GUEST.password)
+  await guestPage.getByRole('button', { name: 'Sign in' }).click()
+
+  await expect(guestPage.getByRole('heading', { name: 'Uninvited Private RSVP Test' })).toBeVisible()
+  await guestPage.getByRole('button', { name: 'Join table and RSVP' }).click()
+  await expect(guestPage).toHaveURL(`/game-nights/${E2E_RSVP_EVENTS.uninvitedPrivate}`)
+
+  const guestAttendance = attendanceSection(guestPage)
+  await guestAttendance.getByRole('button', { name: 'Going', exact: true }).click()
+  await expect(guestPage.getByText('RSVP updated to going.')).toBeVisible()
+  await expect(guestAttendance).toContainText('1 of 4 going')
+  await guestContext.close()
 })

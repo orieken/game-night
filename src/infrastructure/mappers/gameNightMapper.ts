@@ -13,6 +13,7 @@ export interface GameNightDocument {
   invitedUserIds?: string[]
   selectedGameIds?: string[]
   attendeeCount?: number
+  rsvpInviteCode?: string | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }
@@ -31,6 +32,7 @@ export function toGameNight(id: string, row: GameNightDocument): GameNight {
     invitedUserIds: row.invitedUserIds ?? [],
     selectedGameIds: row.selectedGameIds ?? [],
     attendeeCount: row.attendeeCount ?? 0,
+    rsvpInviteCode: row.rsvpInviteCode ?? null,
     createdAt: row.createdAt.toDate(),
     updatedAt: row.updatedAt.toDate()
   }

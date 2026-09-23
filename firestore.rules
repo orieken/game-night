@@ -13,6 +13,22 @@ service cloud.firestore {
       return isMember(groupId) && get(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data.role in ['owner', 'organizer'];
     }
 
+    function invitePath(inviteCode) {
+      return /databases/$(database)/documents/eventInvites/$(inviteCode);
+    }
+
+    function validInviteForGroup(inviteCode, groupId) {
+      return inviteCode is string &&
+        exists(invitePath(inviteCode)) &&
+        get(invitePath(inviteCode)).data.active == true &&
+        get(invitePath(inviteCode)).data.groupId == groupId;
+    }
+
+    function validInviteForEvent(inviteCode, groupId, eventId) {
+      return validInviteForGroup(inviteCode, groupId) &&
+        get(invitePath(inviteCode)).data.eventId == eventId;
+    }
+
     match /users/{userId} {
       allow create: if signedIn() && request.auth.uid == userId;
       allow read: if signedIn();
@@ -26,26 +42,63 @@ service cloud.firestore {
       allow list: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
+    match /eventInvites/{inviteCode} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() &&
+        request.resource.data.code == inviteCode &&
+        request.resource.data.active == true &&
+        isOrganizer(request.resource.data.groupId) &&
+        getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/events/$(request.resource.data.eventId)).data.hostId == request.auth.uid &&
+        getAfter(/databases/$(database)/documents/groups/$(request.resource.data.groupId)/events/$(request.resource.data.eventId)).data.rsvpInviteCode == inviteCode;
+      allow update, delete: if false;
+    }
+
     match /groups/{groupId} {
+      function isOwnInviteJoin() {
+        let membership = getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data;
+        return signedIn() &&
+          membership.userId == request.auth.uid &&
+          validInviteForGroup(membership.inviteCode, groupId) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'updatedAt']) &&
+          request.resource.data.memberIds.hasAll(resource.data.memberIds) &&
+          request.resource.data.memberIds.hasAll([request.auth.uid]) &&
+          request.resource.data.memberIds.size() <= resource.data.memberIds.size() + 1;
+      }
+
+      function isValidInviteMember(userId) {
+        return signedIn() &&
+          userId == request.auth.uid &&
+          request.resource.data.userId == userId &&
+          request.resource.data.role == 'member' &&
+          validInviteForGroup(request.resource.data.inviteCode, groupId);
+      }
+
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
       // A personal group uses the owner's uid as its document id. Allowing the
       // owner to get that one path lets first-run provisioning check whether it
       // exists before the membership subdocument has been created.
       allow get: if signedIn() && (groupId == request.auth.uid || isMember(groupId));
       allow list: if isMember(groupId);
-      allow update, delete: if isOrganizer(groupId);
+      allow update: if isOrganizer(groupId) || isOwnInviteJoin();
+      allow delete: if isOrganizer(groupId);
 
       match /members/{userId} {
-        allow get: if isMember(groupId);
+        allow get: if isMember(groupId) || (signedIn() && request.auth.uid == userId);
         allow list: if isMember(groupId) || (signedIn() && resource.data.userId == request.auth.uid);
         allow create: if request.resource.data.userId == userId && (
           isOrganizer(groupId) || (
             groupId == request.auth.uid &&
             userId == request.auth.uid &&
             request.resource.data.role == 'owner'
-          )
+          ) || isValidInviteMember(userId)
         );
-        allow update: if isOrganizer(groupId) && request.resource.data.userId == userId;
+        allow update: if (isOrganizer(groupId) && request.resource.data.userId == userId) || (
+          signedIn() &&
+          request.auth.uid == userId &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['inviteCode']) &&
+          validInviteForGroup(request.resource.data.inviteCode, groupId)
+        );
         allow delete: if isOrganizer(groupId);
       }
 
@@ -98,6 +151,16 @@ service cloud.firestore {
             validAttendanceCount(request.resource.data);
         }
 
+        function isInviteAcceptance() {
+          let membership = getAfter(/databases/$(database)/documents/groups/$(groupId)/members/$(request.auth.uid)).data;
+          return signedIn() &&
+            validInviteForEvent(membership.inviteCode, groupId, eventId) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['invitedUserIds', 'updatedAt']) &&
+            request.resource.data.invitedUserIds.hasAll(resource.data.invitedUserIds) &&
+            request.resource.data.invitedUserIds.hasAll([request.auth.uid]) &&
+            request.resource.data.invitedUserIds.size() <= resource.data.invitedUserIds.size() + 1;
+        }
+
         function validOwnRsvp(userId) {
           let eventBefore = get(eventPath()).data;
           let eventAfter = getAfter(eventPath()).data;
@@ -127,7 +190,7 @@ service cloud.firestore {
           request.resource.data.invitedUserIds is list &&
           request.resource.data.selectedGameIds is list &&
           validAttendanceCount(request.resource.data);
-        allow update: if isHostUpdate() || isOwnAttendanceUpdate();
+        allow update: if isHostUpdate() || isOwnAttendanceUpdate() || isInviteAcceptance();
         allow delete: if isOrganizer(groupId) && resource.data.hostId == request.auth.uid;
 
         match /rsvps/{userId} {

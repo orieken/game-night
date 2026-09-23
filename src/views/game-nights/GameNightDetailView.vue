@@ -7,6 +7,7 @@ import { useGroupStore } from '@/stores/groupStore'
 import { useGameNightStore } from '@/stores/gameNightStore'
 import { useGameStore } from '@/stores/gameStore'
 import { useToastStore } from '@/stores/toastStore'
+import { useInviteStore } from '@/stores/inviteStore'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -23,12 +24,12 @@ const groupStore = useGroupStore()
 const store = useGameNightStore()
 const gameStore = useGameStore()
 const toastStore = useToastStore()
+const inviteStore = useInviteStore()
 
 const editing = ref(false)
 const confirmingCancellation = ref(false)
-const selectedInvitees = ref<string[]>([])
 const selectedGameIds = ref<string[]>([])
-const inviteEmail = ref('')
+const inviteLink = ref('')
 const form = reactive({
   name: '',
   description: '',
@@ -57,7 +58,6 @@ const capacityLabel = computed(() => {
     ? `${event.value.attendeeCount} going · no limit`
     : `${event.value.attendeeCount} of ${event.value.maxAttendees} going`
 })
-const inviteableMembers = computed(() => groupStore.members.filter((member) => member.userId !== event.value?.hostId))
 const selectedGames = computed(() => gameStore.games.filter((game) => event.value?.selectedGameIds.includes(game.id)))
 
 async function loadEvent() {
@@ -69,8 +69,10 @@ async function loadEvent() {
     await store.fetchGameNightById(groupId, eventId)
     if (store.currentGameNight) {
       await Promise.all([groupStore.fetchMembers(groupId), store.fetchRsvps(groupId, eventId), gameStore.fetchGames(groupId)])
-      selectedInvitees.value = [...store.currentGameNight.invitedUserIds]
       selectedGameIds.value = [...store.currentGameNight.selectedGameIds]
+      inviteLink.value = store.currentGameNight.rsvpInviteCode
+        ? `${globalThis.location.origin}/invite/${store.currentGameNight.rsvpInviteCode}`
+        : ''
     }
   }
 }
@@ -119,16 +121,6 @@ async function cancelEvent() {
   }
 }
 
-async function saveInvitations() {
-  if (!event.value || !groupStore.activeGroupId || !canManage.value) return
-  const updated = await store.updateGameNight(groupStore.activeGroupId, event.value.id, {
-    invitedUserIds: selectedInvitees.value,
-    attendeeCount: event.value.attendeeCount
-  })
-  if (updated) toastStore.show('Invitations updated.', 'success')
-  else toastStore.show(store.error ?? 'Unable to update invitations.', 'error')
-}
-
 async function respond(status: RsvpStatus) {
   if (!event.value || !groupStore.activeGroupId || !authStore.user || !canRsvp.value) return
   const rsvp = await store.respondToGameNight(groupStore.activeGroupId, event.value.id, authStore.user.id, status)
@@ -136,15 +128,26 @@ async function respond(status: RsvpStatus) {
   else toastStore.show(store.rsvpsError ?? 'Unable to update your RSVP.', 'error')
 }
 
-async function addInvitee() {
-  if (!groupStore.activeGroupId || !inviteEmail.value.trim()) return
-  const member = await groupStore.addMemberByEmail(groupStore.activeGroupId, inviteEmail.value)
-  if (member) {
-    if (!selectedInvitees.value.includes(member.userId)) selectedInvitees.value.push(member.userId)
-    inviteEmail.value = ''
-    toastStore.show(`${member.displayName} was added to the guest list. Save invitations to finish.`, 'success')
-  } else {
-    toastStore.show(groupStore.membersError ?? 'Unable to add that member.', 'error')
+async function createInviteLink() {
+  if (!event.value || !groupStore.activeGroupId || !canManage.value) return
+  const code = await inviteStore.create(groupStore.activeGroupId, event.value)
+  if (!code) {
+    toastStore.show(inviteStore.error ?? 'Unable to create the RSVP link.', 'error')
+    return
+  }
+
+  event.value.rsvpInviteCode = code
+  inviteLink.value = `${globalThis.location.origin}/invite/${code}`
+  toastStore.show('RSVP link ready to share.', 'success')
+}
+
+async function copyInviteLink() {
+  if (!inviteLink.value) return
+  try {
+    await globalThis.navigator.clipboard.writeText(inviteLink.value)
+    toastStore.show('RSVP link copied.', 'success')
+  } catch {
+    toastStore.show('Copy failed. Select the link and copy it manually.', 'error')
   }
 }
 
@@ -275,21 +278,14 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
         </section>
 
         <section v-if="canManage && !event.isPublic" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
-          <h2 class="text-lg font-bold text-white">Invitations</h2>
-          <p class="mt-2 text-sm text-slate-400">Choose which members of {{ groupStore.activeGroup?.name }} can RSVP.</p>
-          <form class="mt-5 flex flex-col gap-3 sm:flex-row" @submit.prevent="addInvitee">
-            <AppInput id="invite-email" v-model="inviteEmail" type="email" label="Add a member by account email" placeholder="player@example.com" class="flex-1" />
-            <AppButton type="submit" class="self-end" :loading="groupStore.membersLoading">Add member</AppButton>
-          </form>
-          <p v-if="groupStore.membersError" class="mt-3 text-sm text-red-300" role="alert">{{ groupStore.membersError }}</p>
-          <div class="mt-5 grid gap-3 sm:grid-cols-2">
-            <label v-for="member in inviteableMembers" :key="member.userId" class="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
-              <input v-model="selectedInvitees" type="checkbox" :value="member.userId" class="h-5 w-5 rounded border-white/20 bg-[#10131a] text-[#8b5cf6]">
-              <span>{{ member.displayName }}</span>
-            </label>
+          <h2 class="text-lg font-bold text-white">Share an RSVP link</h2>
+          <p class="mt-2 text-sm text-slate-400">Anyone with this private link can join {{ groupStore.activeGroup?.name }} and RSVP after signing in.</p>
+          <div v-if="inviteLink" class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <AppInput id="rsvp-link" :model-value="inviteLink" label="RSVP link" readonly class="min-w-0 flex-1" />
+            <AppButton class="sm:shrink-0" :loading="inviteStore.loading" @click="copyInviteLink">Copy link</AppButton>
           </div>
-          <p v-if="groupStore.members.length <= 1" class="mt-5 text-sm text-slate-500">Add more group members before sending invitations.</p>
-          <AppButton class="mt-5" :loading="store.loading" @click="saveInvitations">Save invitations</AppButton>
+          <AppButton v-else class="mt-5" :loading="inviteStore.loading" @click="createInviteLink">Create RSVP link</AppButton>
+          <p v-if="inviteStore.error" class="mt-3 text-sm text-red-300" role="alert">{{ inviteStore.error }}</p>
         </section>
 
         <section v-if="canManage" class="rounded-2xl border border-red-500/15 bg-red-500/5 p-6">

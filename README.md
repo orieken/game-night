@@ -1,5 +1,7 @@
 # Game Night Tracker - Web App Prototype Brief
 
+**Live app:** [rieken-game-night.netlify.app](https://rieken-game-night.netlify.app/)
+
 ## Product Vision
 A social gaming platform that transforms casual game nights into engaging competitions with intelligent recommendations, gamification, and community features.
 
@@ -69,6 +71,8 @@ A social gaming platform that transforms casual game nights into engaging compet
 
 ### Deployment
 - **Hosting**: Netlify
+- **Production URL**: [https://rieken-game-night.netlify.app/](https://rieken-game-night.netlify.app/)
+- **Environment variables**: Firebase browser configuration uses the `VITE_FIREBASE_*` names from `.env.example`. Configure these in Netlify so Vite exposes them to the client build.
 - **CI/CD**: GitHub Actions with automated testing
 - **Environment Management**: Staging and production branches
 

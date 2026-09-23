@@ -11,6 +11,7 @@ export interface GameNight {
   invitedUserIds: string[]
   selectedGameIds: string[]
   attendeeCount: number
+  rsvpInviteCode?: string | null
   createdAt: Date
   updatedAt: Date
 }

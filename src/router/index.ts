@@ -11,6 +11,7 @@ import GameNightListView from '@/views/game-nights/GameNightListView.vue'
 import GameNightDetailView from '@/views/game-nights/GameNightDetailView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import LeaderboardView from '@/views/leaderboard/LeaderboardView.vue'
+import AcceptInviteView from '@/views/invites/AcceptInviteView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -76,6 +77,12 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
+      path: '/invite/:code',
+      name: 'accept-invite',
+      component: AcceptInviteView,
+      meta: { requiresAuth: true }
+    },
+    {
       path: '/leaderboard',
       name: 'leaderboard',
       component: LeaderboardView,
@@ -99,7 +106,7 @@ router.beforeEach(async (to, _from, next) => {
 
   if (to.meta.requiresAuth && !authStore.user) {
     if (!authStore.user) {
-      next({ name: 'login' })
+      next({ name: 'login', query: { redirect: to.fullPath } })
       return
     }
   }

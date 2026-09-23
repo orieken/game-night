@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import AppInput from '@/components/common/AppInput.vue'
 import AppButton from '@/components/common/AppButton.vue'
@@ -13,6 +13,10 @@ const validationError = ref('')
 
 const authStore = useAuthStore()
 const router = useRouter()
+const route = useRoute()
+const redirectTarget = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/')
+  ? route.query.redirect
+  : '/'
 
 const handleRegister = async () => {
   validationError.value = ''
@@ -24,7 +28,7 @@ const handleRegister = async () => {
 
   const success = await authStore.register(email.value, password.value, username.value)
   if (success) {
-    router.push('/')
+    router.push(redirectTarget)
   }
 }
 </script>
@@ -57,7 +61,7 @@ const handleRegister = async () => {
             <AppButton type="submit" class="w-full" :loading="authStore.loading">Create account</AppButton>
           </form>
 
-          <p class="mt-6 text-center text-sm text-slate-400">Already have an account? <router-link to="/login" class="font-semibold text-[#57d2a4] hover:text-[#85e4c3]">Sign in</router-link></p>
+          <p class="mt-6 text-center text-sm text-slate-400">Already have an account? <router-link :to="{ path: '/login', query: route.query }" class="font-semibold text-[#57d2a4] hover:text-[#85e4c3]">Sign in</router-link></p>
         </div>
       </section>
     </div>
