@@ -141,7 +141,7 @@ Choose a warm, contemporary game-table look rather than the current generic dark
 - [ ] Ratings/comments and a lightweight activity feed.
 - [ ] Achievements/challenges, based on audited scoring rules.
 - [ ] Notifications/reminders via Cloud Functions.
-- [ ] Game discovery/import (for example, BoardGameGeek) with terms/rate-limit review.
+- [ ] Game discovery/import and tabletop RPG support; track the phased work in [Board Game Catalog and Tabletop RPG Roadmap](game-catalog-rpg-roadmap.md).
 - [ ] Recommendations once the group has enough historical plays.
 
 ## Suggested sequence
