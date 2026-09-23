@@ -12,6 +12,7 @@ import GameNightDetailView from '@/views/game-nights/GameNightDetailView.vue'
 import NotFoundView from '@/views/NotFoundView.vue'
 import LeaderboardView from '@/views/leaderboard/LeaderboardView.vue'
 import AcceptInviteView from '@/views/invites/AcceptInviteView.vue'
+import UsersView from '@/views/users/UsersView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -80,6 +81,12 @@ const router = createRouter({
       path: '/invite/:code',
       name: 'accept-invite',
       component: AcceptInviteView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/users',
+      name: 'users',
+      component: UsersView,
       meta: { requiresAuth: true }
     },
     {

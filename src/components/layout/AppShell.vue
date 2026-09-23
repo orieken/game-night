@@ -18,6 +18,7 @@ const navigation = [
   { label: 'Overview', to: '/', icon: '⌂' },
   { label: 'Game nights', to: '/game-nights', icon: '◈' },
   { label: 'Library', to: '/games', icon: '◌' },
+  { label: 'Users', to: '/users', icon: '♙' },
   { label: 'Leaderboard', to: '/leaderboard', icon: '♜' }
 ]
 
