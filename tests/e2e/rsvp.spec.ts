@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { loginAsGuest, loginAsHost } from './helpers'
-import { E2E_GUEST, E2E_RSVP_EVENTS } from './seedData'
+import { E2E_CAMPAIGN, E2E_GUEST, E2E_RSVP_EVENTS } from './seedData'
 
 function attendanceSection(page: Page) {
   return page.locator('section').filter({
@@ -8,11 +8,12 @@ function attendanceSection(page: Page) {
   })
 }
 
-test('persists RSVP transitions and keeps the attendee count in sync', async ({ page }) => {
+test('persists RPG event RSVP transitions and keeps attendance in sync', async ({ page }) => {
   await loginAsHost(page)
   await page.goto(`/game-nights/${E2E_RSVP_EVENTS.public}`)
 
   const attendance = attendanceSection(page)
+  await expect(page.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` })).toBeVisible()
   await expect(attendance).toContainText('0 of 4 going')
 
   await attendance.getByRole('button', { name: 'Going', exact: true }).click()
@@ -30,11 +31,13 @@ test('persists RSVP transitions and keeps the attendee count in sync', async ({ 
   await expect(attendance).toContainText('Your RSVP: maybe')
 })
 
-test('rejects a going RSVP when the event has no remaining capacity', async ({ page }) => {
+test('enforces capacity for a campaign-linked mixed event', async ({ page }) => {
   await loginAsGuest(page)
   await page.goto(`/game-nights/${E2E_RSVP_EVENTS.full}`)
 
   const attendance = attendanceSection(page)
+  await expect(page.getByText('Mixed night', { exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` })).toBeVisible()
   await expect(attendance).toContainText('0 of 0 going')
   await attendance.getByRole('button', { name: 'Going', exact: true }).click()
 
@@ -65,9 +68,10 @@ test('hides RSVP controls from an uninvited member of a private event', async ({
   await expect(attendance.getByLabel('RSVP options')).toHaveCount(0)
 })
 
-test('lets a guest join and RSVP from a private share link', async ({ page, browser }) => {
+test('lets a guest join a private RPG event and RSVP from its share link', async ({ page, browser }) => {
   await loginAsHost(page)
   await page.goto(`/game-nights/${E2E_RSVP_EVENTS.uninvitedPrivate}`)
+  await expect(page.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` })).toBeVisible()
 
   const sharing = page.locator('section').filter({
     has: page.getByRole('heading', { name: 'Share an RSVP link' })
@@ -88,6 +92,7 @@ test('lets a guest join and RSVP from a private share link', async ({ page, brow
   await expect(guestPage.getByRole('heading', { name: 'Uninvited Private RSVP Test' })).toBeVisible()
   await guestPage.getByRole('button', { name: 'Join table and RSVP' }).click()
   await expect(guestPage).toHaveURL(`/game-nights/${E2E_RSVP_EVENTS.uninvitedPrivate}`)
+  await expect(guestPage.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` })).toBeVisible()
 
   const guestAttendance = attendanceSection(guestPage)
   await guestAttendance.getByRole('button', { name: 'Going', exact: true }).click()

@@ -17,6 +17,7 @@ import ErrorState from '@/components/common/ErrorState.vue'
 import EventSessions from '@/components/game-night/EventSessions.vue'
 import type { GameNightType, RsvpStatus } from '@/domain/entities/GameNight'
 import { gameNightTypeLabel, gameNightTypeOptions } from '@/domain/gameNightTypes'
+import { useCampaignStore } from '@/stores/campaignStore'
 
 const route = useRoute()
 const router = useRouter()
@@ -26,6 +27,7 @@ const store = useGameNightStore()
 const gameStore = useGameStore()
 const toastStore = useToastStore()
 const inviteStore = useInviteStore()
+const campaignStore = useCampaignStore()
 
 const editing = ref(false)
 const confirmingCancellation = ref(false)
@@ -34,6 +36,7 @@ const inviteLink = ref('')
 const form = reactive({
   name: '',
   eventType: 'board_game' as GameNightType,
+  campaignId: '',
   description: '',
   eventDate: '',
   eventTime: '',
@@ -63,6 +66,7 @@ const capacityLabel = computed(() => {
 const selectedGames = computed(() => gameStore.games.filter((game) => event.value?.selectedGameIds.includes(game.id)))
 const includesBoardGames = computed(() => event.value?.eventType !== 'tabletop_rpg')
 const includesTabletopRpg = computed(() => event.value?.eventType !== 'board_game')
+const linkedCampaign = computed(() => campaignStore.campaigns.find((campaign) => campaign.id === event.value?.campaignId) ?? null)
 
 async function loadEvent() {
   const groupId = groupStore.activeGroupId
@@ -72,7 +76,7 @@ async function loadEvent() {
   if (groupId && typeof eventId === 'string') {
     await store.fetchGameNightById(groupId, eventId)
     if (store.currentGameNight) {
-      await Promise.all([groupStore.fetchMembers(groupId), store.fetchRsvps(groupId, eventId), gameStore.fetchGames(groupId)])
+      await Promise.all([groupStore.fetchMembers(groupId), store.fetchRsvps(groupId, eventId), gameStore.fetchGames(groupId), campaignStore.fetchCampaigns(groupId)])
       selectedGameIds.value = [...store.currentGameNight.selectedGameIds]
       inviteLink.value = store.currentGameNight.rsvpInviteCode
         ? `${globalThis.location.origin}/invite/${store.currentGameNight.rsvpInviteCode}`
@@ -85,6 +89,7 @@ function startEditing() {
   if (!event.value || !canManage.value) return
   form.name = event.value.name
   form.eventType = event.value.eventType
+  form.campaignId = event.value.campaignId ?? ''
   form.description = event.value.description ?? ''
   form.eventDate = format(event.value.eventDate, 'yyyy-MM-dd')
   form.eventTime = format(event.value.eventDate, 'HH:mm')
@@ -100,6 +105,7 @@ async function saveChanges() {
   const updated = await store.updateGameNight(groupStore.activeGroupId, event.value.id, {
     name: form.name,
     eventType: form.eventType,
+    campaignId: form.eventType === 'board_game' ? null : form.campaignId || null,
     description: form.description || null,
     eventDate: new Date(`${form.eventDate}T${form.eventTime}`),
     location: form.location || null,
@@ -202,6 +208,13 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
             </label>
           </div>
         </fieldset>
+        <div v-if="form.eventType !== 'board_game'">
+          <label class="app-label" for="edit-event-campaign">Campaign (optional)</label>
+          <select id="edit-event-campaign" v-model="form.campaignId" class="app-field">
+            <option value="">No linked campaign</option>
+            <option v-for="campaignOption in campaignStore.campaigns.filter((item) => item.status !== 'archived' || item.id === form.campaignId)" :key="campaignOption.id" :value="campaignOption.id">{{ campaignOption.name }} · {{ campaignOption.system }}</option>
+          </select>
+        </div>
         <div class="grid gap-4 sm:grid-cols-2">
           <AppInput id="edit-event-date" v-model="form.eventDate" type="date" label="Date" required />
           <AppInput id="edit-event-time" v-model="form.eventTime" type="time" label="Time" required />
@@ -244,8 +257,12 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
 
         <section v-if="includesTabletopRpg" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
           <p class="text-xs font-semibold uppercase tracking-wider text-[#c4b5fd]">Tabletop RPG</p>
-          <h2 class="mt-2 text-lg font-bold text-white">Campaign planning</h2>
-          <p class="mt-2 text-sm leading-6 text-slate-400">Campaigns, player-managed characters, and adventure recaps are coming in the next RPG milestones. You can use the event description for session details in the meantime.</p>
+          <h2 class="mt-2 text-lg font-bold text-white">Campaign</h2>
+          <template v-if="linkedCampaign">
+            <p class="mt-2 text-sm leading-6 text-slate-400">This session belongs to {{ linkedCampaign.system }}<template v-if="linkedCampaign.variant"> · {{ linkedCampaign.variant }}</template>.</p>
+            <RouterLink :to="`/campaigns/${linkedCampaign.id}`" class="mt-4 inline-flex min-h-11 items-center font-semibold text-[#57d2a4] hover:text-[#85e4c3]">View {{ linkedCampaign.name }} →</RouterLink>
+          </template>
+          <p v-else class="mt-2 text-sm leading-6 text-slate-400">No campaign is linked yet. The host can edit this event to connect it to a campaign.</p>
         </section>
 
         <section v-if="includesBoardGames" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">

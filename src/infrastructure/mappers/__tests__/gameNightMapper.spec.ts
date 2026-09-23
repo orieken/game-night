@@ -22,10 +22,14 @@ describe('gameNightMapper', () => {
   }
 
   it('treats existing documents without an event type as board-game events', () => {
-    expect(toGameNight('event-1', document).eventType).toBe('board_game')
+    const event = toGameNight('event-1', document)
+    expect(event.eventType).toBe('board_game')
+    expect(event.campaignId).toBeNull()
   })
 
   it('preserves an explicit tabletop RPG event type', () => {
-    expect(toGameNight('event-2', { ...document, eventType: 'tabletop_rpg' }).eventType).toBe('tabletop_rpg')
+    const event = toGameNight('event-2', { ...document, eventType: 'tabletop_rpg', campaignId: 'campaign-1' })
+    expect(event.eventType).toBe('tabletop_rpg')
+    expect(event.campaignId).toBe('campaign-1')
   })
 })

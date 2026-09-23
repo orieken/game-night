@@ -8,6 +8,7 @@ export interface GameNightDocument {
   location: string | null
   hostId: string
   eventType?: GameNightType
+  campaignId?: string | null
   status: GameNight['status']
   maxAttendees: number | null
   isPublic: boolean
@@ -28,6 +29,7 @@ export function toGameNight(id: string, row: GameNightDocument): GameNight {
     location: row.location,
     hostId: row.hostId,
     eventType: row.eventType ?? 'board_game',
+    campaignId: row.campaignId ?? null,
     status: row.status,
     maxAttendees: row.maxAttendees,
     isPublic: row.isPublic,

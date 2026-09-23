@@ -178,6 +178,15 @@ service cloud.firestore {
           return eventData.get('eventType', 'board_game') in ['board_game', 'tabletop_rpg', 'mixed'];
         }
 
+        function validCampaignLink(eventData) {
+          let campaignId = eventData.get('campaignId', null);
+          return campaignId == null || (
+            campaignId is string &&
+            eventData.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed'] &&
+            exists(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId))
+          );
+        }
+
         function isHostUpdate() {
           return isOrganizer(groupId) &&
             resource.data.hostId == request.auth.uid &&
@@ -186,6 +195,7 @@ service cloud.firestore {
             request.resource.data.invitedUserIds is list &&
             request.resource.data.selectedGameIds is list &&
             validEventType(request.resource.data) &&
+            validCampaignLink(request.resource.data) &&
             resource.data.status != 'cancelled';
         }
 
@@ -236,6 +246,7 @@ service cloud.firestore {
           request.resource.data.invitedUserIds is list &&
           request.resource.data.selectedGameIds is list &&
           validEventType(request.resource.data) &&
+          validCampaignLink(request.resource.data) &&
           validAttendanceCount(request.resource.data);
         allow update: if isHostUpdate() || isOwnAttendanceUpdate() || isInviteAcceptance();
         allow delete: if isOrganizer(groupId) && resource.data.hostId == request.auth.uid;

@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, where } from 'firebase/firestore'
 import type { Campaign } from '@/domain/entities/Campaign'
 import type { ICampaignRepository } from '@/domain/interfaces/ICampaignRepository'
 import { getFirestoreDb } from '@/infrastructure/api/firebaseClient'
@@ -10,9 +10,9 @@ function campaignsCollection(groupId: string) {
 
 export const campaignRepository: ICampaignRepository = {
   async getAll(groupId, status): Promise<Campaign[]> {
-    const snapshot = await getDocs(query(campaignsCollection(groupId), orderBy('name')))
-    const campaigns = snapshot.docs.map((campaign) => toCampaign(campaign.id, campaign.data() as CampaignDocument))
-    return status ? campaigns.filter((campaign) => campaign.status === status) : campaigns
+    const constraints = status ? [where('status', '==', status), orderBy('name')] : [orderBy('name')]
+    const snapshot = await getDocs(query(campaignsCollection(groupId), ...constraints))
+    return snapshot.docs.map((campaign) => toCampaign(campaign.id, campaign.data() as CampaignDocument))
   },
 
   async getById(groupId, id): Promise<Campaign | null> {

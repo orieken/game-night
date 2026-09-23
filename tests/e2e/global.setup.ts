@@ -1,7 +1,7 @@
 import { deleteApp, initializeApp } from 'firebase/app'
 import { connectAuthEmulator, createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { connectFirestoreEmulator, doc, getFirestore, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore'
-import { E2E_GAME, E2E_GUEST, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
+import { E2E_CAMPAIGN, E2E_GAME, E2E_GUEST, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
 
 const projectId = 'demo-game-night'
 
@@ -95,6 +95,21 @@ export default async function globalSetup() {
     updatedAt: serverTimestamp()
   })
 
+  await setDoc(doc(groupRef, 'campaigns', E2E_CAMPAIGN.id), {
+    name: E2E_CAMPAIGN.name,
+    description: 'A deterministic campaign for local browser tests.',
+    system: 'Symbaroum',
+    variant: 'Original rules',
+    status: 'active',
+    dmIds: [userId],
+    memberIds: [userId, guestId],
+    externalLinks: [],
+    characterFieldDefinitions: [],
+    createdById: userId,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  })
+
   const eventDate = Timestamp.fromDate(new Date('2027-01-15T18:00:00.000Z'))
   const eventsBatch = writeBatch(database)
   const eventDefaults = {
@@ -111,6 +126,8 @@ export default async function globalSetup() {
   eventsBatch.set(doc(groupRef, 'events', E2E_RSVP_EVENTS.public), {
     ...eventDefaults,
     name: 'Public RSVP Test',
+    eventType: 'tabletop_rpg',
+    campaignId: E2E_CAMPAIGN.id,
     maxAttendees: 4,
     isPublic: true,
     invitedUserIds: []
@@ -118,6 +135,8 @@ export default async function globalSetup() {
   eventsBatch.set(doc(groupRef, 'events', E2E_RSVP_EVENTS.full), {
     ...eventDefaults,
     name: 'Full RSVP Test',
+    eventType: 'mixed',
+    campaignId: E2E_CAMPAIGN.id,
     maxAttendees: 0,
     isPublic: true,
     invitedUserIds: []
@@ -132,6 +151,8 @@ export default async function globalSetup() {
   eventsBatch.set(doc(groupRef, 'events', E2E_RSVP_EVENTS.uninvitedPrivate), {
     ...eventDefaults,
     name: 'Uninvited Private RSVP Test',
+    eventType: 'tabletop_rpg',
+    campaignId: E2E_CAMPAIGN.id,
     maxAttendees: 4,
     isPublic: false,
     invitedUserIds: []

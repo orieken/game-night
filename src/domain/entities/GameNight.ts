@@ -8,6 +8,7 @@ export interface GameNight {
   location: string | null
   hostId: string
   eventType: GameNightType
+  campaignId: string | null
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
   maxAttendees: number | null
   isPublic: boolean

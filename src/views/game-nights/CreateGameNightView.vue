@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameNightStore } from '@/stores/gameNightStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -11,16 +11,19 @@ import ErrorState from '@/components/common/ErrorState.vue'
 import { useToastStore } from '@/stores/toastStore'
 import { gameNightTypeOptions } from '@/domain/gameNightTypes'
 import type { GameNightType } from '@/domain/entities/GameNight'
+import { useCampaignStore } from '@/stores/campaignStore'
 
 const router = useRouter()
 const store = useGameNightStore()
 const authStore = useAuthStore()
 const groupStore = useGroupStore()
 const toastStore = useToastStore()
+const campaignStore = useCampaignStore()
 
 const form = ref({
   name: '',
   eventType: 'board_game' as GameNightType,
+  campaignId: '',
   description: '',
   eventDate: '',
   eventTime: '',
@@ -42,6 +45,7 @@ const handleSubmit = async () => {
     location: form.value.location || null,
     hostId: authStore.user.id,
     eventType: form.value.eventType,
+    campaignId: form.value.eventType === 'board_game' ? null : form.value.campaignId || null,
     status: 'upcoming',
     maxAttendees: form.value.maxAttendees,
     isPublic: form.value.isPublic,
@@ -57,6 +61,10 @@ const handleSubmit = async () => {
     toastStore.show(store.error ?? 'Unable to create the game night.', 'error')
   }
 }
+
+watch(() => groupStore.activeGroupId, (groupId) => {
+  if (groupId) void campaignStore.fetchCampaigns(groupId)
+}, { immediate: true })
 </script>
 
 <template>
@@ -81,6 +89,14 @@ const handleSubmit = async () => {
             </label>
           </div>
         </fieldset>
+        <div v-if="form.eventType !== 'board_game'">
+          <label class="app-label" for="campaign">Campaign (optional)</label>
+          <select id="campaign" v-model="form.campaignId" class="app-field">
+            <option value="">No linked campaign</option>
+            <option v-for="campaign in campaignStore.campaigns.filter((item) => item.status !== 'archived')" :key="campaign.id" :value="campaign.id">{{ campaign.name }} · {{ campaign.system }}</option>
+          </select>
+          <p class="mt-2 text-xs text-slate-400">Link this session to an existing campaign, or create the campaign first.</p>
+        </div>
         <AppInput
           id="name"
           v-model="form.name"

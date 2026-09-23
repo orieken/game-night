@@ -10,6 +10,8 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorState from '@/components/common/ErrorState.vue'
 import LoadingState from '@/components/common/LoadingState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
+import { useGameNightStore } from '@/stores/gameNightStore'
+import { format } from 'date-fns'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,12 +19,16 @@ const authStore = useAuthStore()
 const campaignStore = useCampaignStore()
 const groupStore = useGroupStore()
 const toastStore = useToastStore()
+const gameNightStore = useGameNightStore()
 const confirmingArchive = ref(false)
 const campaign = computed(() => campaignStore.currentCampaign)
 const memberRole = computed(() => groupStore.members.find((member) => member.userId === authStore.user?.id)?.role)
 const canManage = computed(() => memberRole.value === 'owner' || memberRole.value === 'organizer' || Boolean(campaign.value?.dmIds.includes(authStore.user?.id ?? '')))
 const dms = computed(() => groupStore.members.filter((member) => campaign.value?.dmIds.includes(member.userId)))
 const players = computed(() => groupStore.members.filter((member) => campaign.value?.memberIds.includes(member.userId)))
+const linkedEvents = computed(() => gameNightStore.gameNights
+  .filter((event) => event.campaignId === campaign.value?.id)
+  .sort((left, right) => left.eventDate.getTime() - right.eventDate.getTime()))
 
 function loadCampaign() {
   const groupId = groupStore.activeGroupId
@@ -30,7 +36,8 @@ function loadCampaign() {
   confirmingArchive.value = false
   if (groupId && typeof id === 'string') void Promise.all([
     campaignStore.fetchCampaignById(groupId, id),
-    groupStore.fetchMembers(groupId)
+    groupStore.fetchMembers(groupId),
+    gameNightStore.fetchGameNights(groupId)
   ])
 }
 
@@ -70,6 +77,13 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadCampaign, { i
           <section v-if="campaign.externalLinks.length" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <h2 class="text-lg font-bold text-white">Campaign links</h2>
             <ul class="mt-4 space-y-2"><li v-for="link in campaign.externalLinks" :key="link.url"><a :href="link.url" target="_blank" rel="noreferrer" class="inline-flex min-h-11 items-center font-semibold text-[#57d2a4] hover:text-[#85e4c3]">{{ link.label }} ↗</a></li></ul>
+          </section>
+          <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
+            <h2 class="text-lg font-bold text-white">Scheduled sessions</h2>
+            <p v-if="!linkedEvents.length" class="mt-3 text-sm text-slate-400">No game nights are linked to this campaign yet.</p>
+            <ul v-else class="mt-4 space-y-3">
+              <li v-for="event in linkedEvents" :key="event.id"><RouterLink :to="`/game-nights/${event.id}`" class="flex min-h-11 items-center justify-between gap-4 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 transition hover:border-[#57d2a4]/40"><span><strong class="block text-white">{{ event.name }}</strong><span class="mt-1 block text-xs text-slate-400">{{ format(event.eventDate, 'MMM d, yyyy · h:mm a') }}</span></span><span class="text-xs uppercase tracking-wider text-[#57d2a4]">{{ event.status.replace('_', ' ') }}</span></RouterLink></li>
+            </ul>
           </section>
         </div>
         <aside class="space-y-6">

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { loginAsHost } from './helpers'
+import { E2E_CAMPAIGN } from './seedData'
 
 test('host creates an event, records a result, and sees the leaderboard', async ({ page }) => {
   await loginAsHost(page)
@@ -47,6 +48,7 @@ test('host creates an RPG event and can change it to a mixed night', async ({ pa
   const eventDate = new Date(Date.now() + 172_800_000).toISOString().slice(0, 10)
   await page.getByText('Tabletop RPG', { exact: true }).click()
   await expect(page.getByLabel(/Tabletop RPG/)).toBeChecked()
+  await page.getByLabel('Campaign (optional)').selectOption(E2E_CAMPAIGN.id)
   await page.getByLabel('Event Name').fill('E2E Symbaroum Session')
   await page.getByLabel('Date').fill(eventDate)
   await page.getByLabel('Time').fill('19:00')
@@ -56,7 +58,7 @@ test('host creates an RPG event and can change it to a mixed night', async ({ pa
   await expect(eventLink).toContainText('Tabletop RPG')
   await eventLink.click()
 
-  await expect(page.getByText('Campaign planning')).toBeVisible()
+  await expect(page.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Games for this event' })).toHaveCount(0)
   await page.getByRole('button', { name: 'Edit event' }).click()
   await page.getByText('Mixed night', { exact: true }).click()
@@ -66,6 +68,10 @@ test('host creates an RPG event and can change it to a mixed night', async ({ pa
   await expect(page.getByText('Game night updated.')).toBeVisible()
   await expect(page.getByText('Mixed night', { exact: true })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Games for this event' })).toBeVisible()
+
+  await page.getByRole('link', { name: `View ${E2E_CAMPAIGN.name} →` }).click()
+  await expect(page.getByRole('heading', { name: 'Scheduled sessions' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /E2E Symbaroum Session/ })).toBeVisible()
 })
 
 test('filters upcoming events and history by event type', async ({ page }) => {

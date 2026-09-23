@@ -81,6 +81,25 @@ async function seedEvent(groupId: string, eventId: string, overrides: Record<str
   })
 }
 
+async function seedCampaign(groupId: string, campaignId: string) {
+  await testEnvironment.withSecurityRulesDisabled(async (context) => {
+    await setDoc(doc(context.firestore(), 'groups', groupId, 'campaigns', campaignId), {
+      name: 'The Darkest Star',
+      description: null,
+      system: 'Symbaroum',
+      variant: 'Original rules',
+      status: 'active',
+      dmIds: ['owner-1'],
+      memberIds: ['owner-1'],
+      externalLinks: [],
+      characterFieldDefinitions: [],
+      createdById: 'owner-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    })
+  })
+}
+
 describe('Firestore security rules', () => {
   it('allows a signed-in user to provision their personal group atomically', async () => {
     const database = testEnvironment.authenticatedContext('owner-1').firestore()
@@ -241,6 +260,7 @@ describe('Firestore security rules', () => {
       { id: 'organizer-1', role: 'organizer' },
       { id: 'organizer-2', role: 'organizer' }
     ])
+    await seedCampaign('group-1', 'campaign-1')
 
     const organizerDatabase = testEnvironment.authenticatedContext('organizer-1').firestore()
     const eventRef = doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-1')
@@ -257,6 +277,21 @@ describe('Firestore security rules', () => {
     }
 
     await assertSucceeds(setDoc(eventRef, event))
+    await assertSucceeds(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-linked-rpg'), {
+      ...event,
+      eventType: 'tabletop_rpg',
+      campaignId: 'campaign-1'
+    }))
+    await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-board-campaign'), {
+      ...event,
+      eventType: 'board_game',
+      campaignId: 'campaign-1'
+    }))
+    await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-missing-campaign'), {
+      ...event,
+      eventType: 'tabletop_rpg',
+      campaignId: 'missing-campaign'
+    }))
     await assertSucceeds(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-rpg'), {
       ...event,
       eventType: 'tabletop_rpg'

@@ -15,6 +15,11 @@ export const E2E_GAME = {
   name: 'Azul'
 } as const
 
+export const E2E_CAMPAIGN = {
+  id: 'davokar-campaign',
+  name: 'E2E Davokar Campaign'
+} as const
+
 export const E2E_RSVP_EVENTS = {
   public: 'rsvp-public',
   full: 'rsvp-full',
