@@ -12,7 +12,7 @@ const selectedGroupId = computed({
 
 <template>
   <div v-if="groupStore.groups.length" class="space-y-2">
-    <label for="active-group" class="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+    <label for="active-group" class="block text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
       Active table
     </label>
     <select

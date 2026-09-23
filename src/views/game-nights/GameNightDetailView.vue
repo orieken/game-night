@@ -205,10 +205,10 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
 
       <div v-else class="space-y-6">
         <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-500">Date</p><p class="mt-2 font-semibold text-white">{{ format(event.eventDate, 'MMM d, yyyy') }}</p></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-500">Time</p><p class="mt-2 font-semibold text-white">{{ format(event.eventDate, 'h:mm a') }}</p></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-500">Location</p><p class="mt-2 font-semibold text-white">{{ event.location || 'To be decided' }}</p></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-500">Capacity</p><p class="mt-2 font-semibold text-white">{{ event.maxAttendees || 'No limit' }}</p></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-400">Date</p><p class="mt-2 font-semibold text-white">{{ format(event.eventDate, 'MMM d, yyyy') }}</p></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-400">Time</p><p class="mt-2 font-semibold text-white">{{ format(event.eventDate, 'h:mm a') }}</p></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-400">Location</p><p class="mt-2 font-semibold text-white">{{ event.location || 'To be decided' }}</p></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><p class="text-xs uppercase tracking-wider text-slate-400">Capacity</p><p class="mt-2 font-semibold text-white">{{ event.maxAttendees || 'No limit' }}</p></div>
         </section>
 
         <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
@@ -228,7 +228,7 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
             <div v-if="gameStore.availableGames.length" class="grid gap-3 sm:grid-cols-2">
               <label v-for="game in gameStore.availableGames" :key="game.id" class="flex items-center gap-3 rounded-xl border border-white/10 px-4 py-3 text-sm text-slate-200">
                 <input v-model="selectedGameIds" type="checkbox" :value="game.id" class="h-5 w-5 rounded border-white/20 bg-[#10131a] text-[#8b5cf6]">
-                <span><strong class="font-semibold text-white">{{ game.name }}</strong><span class="ml-2 text-slate-500">{{ game.minPlayers }}–{{ game.maxPlayers }} players</span></span>
+                <span><strong class="font-semibold text-white">{{ game.name }}</strong><span class="ml-2 text-slate-400">{{ game.minPlayers }}–{{ game.maxPlayers }} players</span></span>
               </label>
             </div>
             <p v-else class="rounded-xl bg-white/5 p-4 text-sm text-slate-400">Your library has no available games yet.</p>
@@ -239,9 +239,9 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
           </div>
 
           <ul v-else-if="selectedGames.length" class="mt-5 grid gap-3 sm:grid-cols-2">
-            <li v-for="game in selectedGames" :key="game.id" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3"><p class="font-semibold text-white">{{ game.name }}</p><p class="mt-1 text-xs text-slate-500">{{ game.minPlayers }}–{{ game.maxPlayers }} players</p></li>
+            <li v-for="game in selectedGames" :key="game.id" class="rounded-xl border border-white/10 bg-white/5 px-4 py-3"><p class="font-semibold text-white">{{ game.name }}</p><p class="mt-1 text-xs text-slate-400">{{ game.minPlayers }}–{{ game.maxPlayers }} players</p></li>
           </ul>
-          <p v-else class="mt-5 text-sm text-slate-500">No games have been selected yet.</p>
+          <p v-else class="mt-5 text-sm text-slate-400">No games have been selected yet.</p>
         </section>
 
         <EventSessions

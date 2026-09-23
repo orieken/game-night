@@ -170,7 +170,7 @@ watch(
       </fieldset>
 
       <div>
-        <label for="session-notes" class="app-label">Notes <span class="text-slate-500">(optional)</span></label>
+        <label for="session-notes" class="app-label">Notes <span class="text-slate-400">(optional)</span></label>
         <textarea id="session-notes" v-model="notes" rows="2" class="app-field"></textarea>
       </div>
       <p v-if="formError" class="text-sm text-red-300" role="alert">{{ formError }}</p>
@@ -191,7 +191,7 @@ watch(
               <h3 class="font-bold text-white">{{ gameFor(session)?.name ?? 'Unknown game' }}</h3>
               <span class="rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wider" :class="session.status === 'completed' ? 'bg-[#57d2a4]/10 text-[#57d2a4]' : 'bg-amber-400/10 text-amber-300'">{{ session.status.replace('_', ' ') }}</span>
             </div>
-            <p class="mt-1 text-xs text-slate-500">Started {{ format(session.startedAt, 'MMM d, yyyy · h:mm a') }}</p>
+            <p class="mt-1 text-xs text-slate-400">Started {{ format(session.startedAt, 'MMM d, yyyy · h:mm a') }}</p>
             <p v-if="session.notes" class="mt-3 text-sm text-slate-400">{{ session.notes }}</p>
           </div>
           <div v-if="isHost" class="flex gap-2">

@@ -48,7 +48,7 @@ const statusColor = computed(() => {
     </p>
 
     <div class="flex items-center justify-between border-t border-white/10 pt-4">
-      <div class="text-xs text-slate-500">
+      <div class="text-xs text-slate-400">
         {{ gameNight.isPublic ? 'Public event' : 'Private event' }} · {{ gameNight.attendeeCount }} going
       </div>
       <span class="text-[#57d2a4] transition group-hover:translate-x-1" aria-hidden="true">→</span>

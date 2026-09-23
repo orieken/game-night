@@ -3,10 +3,10 @@ import vue from '@vitejs/plugin-vue'
 import { fileURLToPath, URL } from 'node:url'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
-    vueDevTools(),
+    ...(mode === 'e2e' ? [] : [vueDevTools()]),
   ],
   resolve: {
     alias: {
@@ -16,4 +16,4 @@ export default defineConfig({
   server: {
     port: 3000
   }
-})
+}))

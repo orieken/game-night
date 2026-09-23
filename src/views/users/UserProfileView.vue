@@ -74,7 +74,7 @@ watch(() => groupStore.activeGroupId, () => void loadProfile(), { immediate: tru
             </div>
           </div>
           <p v-if="authStore.user?.bio" class="mt-5 max-w-2xl text-sm leading-6 text-slate-300">{{ authStore.user.bio }}</p>
-          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-500">
+          <div class="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-xs text-slate-400">
             <span>@{{ authStore.user?.username }}</span>
             <span v-if="member">Joined this table {{ format(member.joinedAt, 'MMMM d, yyyy') }}</span>
             <span v-if="authStore.user">Account created {{ format(authStore.user.createdAt, 'MMMM yyyy') }}</span>
@@ -88,11 +88,11 @@ watch(() => groupStore.activeGroupId, () => void loadProfile(), { immediate: tru
           <RouterLink to="/leaderboard" class="text-sm font-semibold text-[#bda7ff] hover:text-white">View leaderboard</RouterLink>
         </div>
         <dl class="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-500">Points</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#ff6b5e]">{{ stats.points }}</dd></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-500">Wins</dt><dd class="mt-2 text-3xl font-black tabular-nums text-white">{{ stats.totalWins }}</dd></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-500">Games</dt><dd class="mt-2 text-3xl font-black tabular-nums text-white">{{ stats.totalPlays }}</dd></div>
-          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-500">Win rate</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#57d2a4]">{{ stats.winRate }}%</dd></div>
-          <div class="col-span-2 rounded-2xl border border-white/10 bg-[#181d27] p-5 lg:col-span-1"><dt class="text-xs uppercase tracking-wider text-slate-500">Rank</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#bda7ff]">{{ stats.rank ? `#${stats.rank}` : '—' }}</dd></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-400">Points</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#ff6b5e]">{{ stats.points }}</dd></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-400">Wins</dt><dd class="mt-2 text-3xl font-black tabular-nums text-white">{{ stats.totalWins }}</dd></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-400">Games</dt><dd class="mt-2 text-3xl font-black tabular-nums text-white">{{ stats.totalPlays }}</dd></div>
+          <div class="rounded-2xl border border-white/10 bg-[#181d27] p-5"><dt class="text-xs uppercase tracking-wider text-slate-400">Win rate</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#57d2a4]">{{ stats.winRate }}%</dd></div>
+          <div class="col-span-2 rounded-2xl border border-white/10 bg-[#181d27] p-5 lg:col-span-1"><dt class="text-xs uppercase tracking-wider text-slate-400">Rank</dt><dd class="mt-2 text-3xl font-black tabular-nums text-[#bda7ff]">{{ stats.rank ? `#${stats.rank}` : '—' }}</dd></div>
         </dl>
       </section>
 

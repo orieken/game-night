@@ -61,7 +61,7 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadGame, { immed
           <span v-for="cat in gameStore.currentGame.category" :key="cat" class="rounded-full border border-[#8b5cf6]/25 bg-[#8b5cf6]/10 px-3 py-1 text-sm text-[#c4b5fd]">
             {{ cat }}
           </span>
-          <div v-if="gameStore.currentGame.category.length === 0" class="text-sm text-slate-500">No categories assigned</div>
+          <div v-if="gameStore.currentGame.category.length === 0" class="text-sm text-slate-400">No categories assigned</div>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">

@@ -5,7 +5,7 @@ const toastStore = useToastStore()
 </script>
 
 <template>
-  <div class="pointer-events-none fixed inset-x-4 top-4 z-50 flex flex-col items-end gap-3 sm:left-auto sm:w-96" aria-label="Notifications">
+  <div class="pointer-events-none fixed inset-x-4 top-4 z-50 flex flex-col items-end gap-3 sm:left-auto sm:w-96">
     <TransitionGroup name="toast">
       <div
         v-for="toast in toastStore.messages"
