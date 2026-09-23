@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "typecheck": "vue-tsc -b",
     "preview": "vite preview",
     "test:unit": "vitest",
     "test:rules": "firebase emulators:exec --only firestore --project demo-game-night \"vitest --config vitest.rules.config.ts --run\"",

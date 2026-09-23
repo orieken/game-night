@@ -130,10 +130,10 @@ Choose a warm, contemporary game-table look rather than the current generic dark
 
 - [x] Add domain tests for RSVP transitions, capacity, result validation, and scoring.
 - [x] Test Firebase repositories through emulator-backed browser flows; seed deterministic E2E data rather than registering against production.
-- [ ] Run the repaired IPv4-bound Chromium Playwright suite in CI; add Firefox/WebKit after the core flows are stable. (Local setup complete.)
+- [x] Run the repaired IPv4-bound Chromium Playwright suite in CI; add Firefox/WebKit after the core flows are stable.
 - [x] Add automated Axe and keyboard accessibility checks for P1 flows.
 - [ ] Complete a manual keyboard and screen-reader pass for P1 flows.
-- [ ] Add GitHub Actions for typecheck, lint, unit tests, emulator integration tests, and E2E tests.
+- [x] Add GitHub Actions for typecheck, lint, unit tests, emulator integration tests, and E2E tests.
 - [ ] Configure preview/production hosting, error monitoring, basic privacy policy, and backup/export expectations.
 
 ### P3 — only after P1/P2 are stable
