@@ -30,6 +30,8 @@ async function handleLogout() {
 
 <template>
   <div class="min-h-screen bg-[#10131a] text-[#f7f1e6]">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <aside class="fixed inset-y-0 left-0 hidden w-64 flex-col border-r border-white/10 bg-[#151a24] px-4 py-6 lg:flex">
       <router-link to="/" class="mb-10 flex items-center gap-3 px-2 text-lg font-bold tracking-tight text-[#f7f1e6]">
         <span class="grid h-9 w-9 place-items-center rounded-xl bg-[#ff6b5e] text-xl text-[#10131a]">✦</span>
@@ -65,7 +67,7 @@ async function handleLogout() {
       </div>
     </aside>
 
-    <main class="min-h-screen pb-24 lg:ml-64 lg:pb-8">
+    <main id="main-content" tabindex="-1" class="min-h-screen pb-24 lg:ml-64 lg:pb-8">
       <div class="mx-auto w-full max-w-7xl px-4 py-6 sm:px-8 lg:px-10 lg:py-10">
         <div class="mb-6 lg:hidden">
           <GroupSelector />

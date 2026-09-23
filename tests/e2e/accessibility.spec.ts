@@ -47,3 +47,19 @@ test('primary authenticated views have no serious accessibility violations', asy
     await expectNoSeriousAccessibilityViolations(page)
   }
 })
+
+test('authenticated navigation supports skipping navigation and announces route changes', async ({ page }) => {
+  await loginAsHost(page)
+  await page.reload()
+  await expect(page.getByRole('heading', { name: 'Make tonight count.' })).toBeVisible()
+
+  await page.keyboard.press('Tab')
+  const skipLink = page.getByRole('link', { name: 'Skip to main content' })
+  await expect(skipLink).toBeFocused()
+  await skipLink.press('Enter')
+  await expect(page.locator('#main-content')).toBeFocused()
+
+  await page.getByRole('link', { name: 'Game nights', exact: true }).first().click()
+  await expect(page).toHaveTitle('Game nights · Game Night')
+  await expect(page.locator('#main-content')).toBeFocused()
+})

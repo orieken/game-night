@@ -34,7 +34,7 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#10131a] p-4 sm:p-6 lg:p-8">
+  <main id="main-content" tabindex="-1" class="min-h-screen bg-[#10131a] p-4 sm:p-6 lg:p-8">
     <div class="mx-auto grid min-h-[calc(100vh-2rem)] max-w-7xl overflow-hidden rounded-3xl border border-white/10 bg-[#181d27] shadow-2xl shadow-black/30 lg:min-h-[calc(100vh-4rem)] lg:grid-cols-[1.05fr_0.95fr]">
       <section class="relative hidden overflow-hidden bg-gradient-to-br from-[#33255e] via-[#202b46] to-[#151a24] p-10 lg:flex lg:flex-col">
         <div class="absolute -left-20 top-20 h-72 w-72 rounded-full bg-[#ff6b5e]/25 blur-3xl"></div>
@@ -42,7 +42,7 @@ const handleRegister = async () => {
         <div class="relative flex items-center gap-3 text-lg font-bold text-[#f7f1e6]"><span class="grid h-10 w-10 place-items-center rounded-xl bg-[#ff6b5e] text-xl text-[#10131a]">✦</span>Game Night</div>
         <div class="relative my-auto max-w-lg">
           <p class="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-[#57d2a4]">Pull up a chair</p>
-          <h1 class="display-title text-5xl font-bold leading-[1.05] tracking-tight text-white">Build a table worth returning to.</h1>
+          <p class="display-title text-5xl font-bold leading-[1.05] tracking-tight text-white">Build a table worth returning to.</p>
           <p class="mt-6 text-lg leading-8 text-slate-300">Plan the night, share the shelf, and remember who really won.</p>
         </div>
       </section>
@@ -65,5 +65,5 @@ const handleRegister = async () => {
         </div>
       </section>
     </div>
-  </div>
+  </main>
 </template>

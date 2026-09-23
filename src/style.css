@@ -44,6 +44,21 @@ button, input, select, textarea { font: inherit; }
 
 :focus-visible { outline: 2px solid var(--color-mint); outline-offset: 3px; }
 
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 50;
+  transform: translateY(-200%);
+  border-radius: 0.75rem;
+  background: var(--color-mint);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  transition: transform 160ms ease;
+}
+.skip-link:focus { transform: translateY(0); }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
 }
