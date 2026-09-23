@@ -54,13 +54,13 @@ async function handleLogout() {
       </nav>
 
       <div class="mt-auto border-t border-white/10 pt-4">
-        <div class="flex items-center gap-3 px-3 py-3">
+        <router-link to="/profile" class="flex items-center gap-3 rounded-xl px-3 py-3 transition hover:bg-white/5" aria-label="View your profile">
           <div class="grid h-9 w-9 place-items-center rounded-full bg-[#57d2a4] text-xs font-bold text-[#10131a]">{{ initials }}</div>
           <div class="min-w-0">
             <p class="truncate text-sm font-semibold text-white">{{ authStore.user?.displayName ?? authStore.user?.username }}</p>
-            <p class="text-xs text-slate-500">Game night host</p>
+            <p class="text-xs text-slate-500">View your profile</p>
           </div>
-        </div>
+        </router-link>
         <button class="min-h-11 w-full rounded-xl px-3 py-2 text-left text-sm text-slate-400 transition hover:bg-white/5 hover:text-white" type="button" @click="handleLogout">Sign out</button>
       </div>
     </aside>
