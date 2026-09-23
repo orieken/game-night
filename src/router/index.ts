@@ -14,6 +14,9 @@ import LeaderboardView from '@/views/leaderboard/LeaderboardView.vue'
 import AcceptInviteView from '@/views/invites/AcceptInviteView.vue'
 import UsersView from '@/views/users/UsersView.vue'
 import UserProfileView from '@/views/users/UserProfileView.vue'
+import CampaignListView from '@/views/campaigns/CampaignListView.vue'
+import CampaignFormView from '@/views/campaigns/CampaignFormView.vue'
+import CampaignDetailView from '@/views/campaigns/CampaignDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -77,6 +80,30 @@ const router = createRouter({
       name: 'game-night-detail',
       component: GameNightDetailView,
       meta: { requiresAuth: true, title: 'Game night details' }
+    },
+    {
+      path: '/campaigns',
+      name: 'campaigns',
+      component: CampaignListView,
+      meta: { requiresAuth: true, title: 'Campaigns' }
+    },
+    {
+      path: '/campaigns/new',
+      name: 'campaign-create',
+      component: CampaignFormView,
+      meta: { requiresAuth: true, title: 'Create campaign' }
+    },
+    {
+      path: '/campaigns/:id/edit',
+      name: 'campaign-edit',
+      component: CampaignFormView,
+      meta: { requiresAuth: true, title: 'Edit campaign' }
+    },
+    {
+      path: '/campaigns/:id',
+      name: 'campaign-detail',
+      component: CampaignDetailView,
+      meta: { requiresAuth: true, title: 'Campaign details' }
     },
     {
       path: '/invite/:code',

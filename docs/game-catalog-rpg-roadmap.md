@@ -46,7 +46,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Add event-type filters and type-aware history views.
 - [x] Add campaign entities and Firestore repositories under each group.
 - [x] Store campaign name, description, system, variant/edition, status, DM IDs, member IDs, optional external links, and optional character-field definitions.
-- [ ] Add campaign create, edit, archive, list, and detail views.
+- [x] Add campaign create, edit, archive, list, and detail views.
 - [ ] Allow RPG and mixed events to link to a campaign.
 - [ ] Reuse existing invite, RSVP, capacity, attendance, and share-link behavior for RPG events.
 - [ ] Update Firestore rules, indexes, emulator rule tests, and E2E fixtures for campaigns and event types.
