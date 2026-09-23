@@ -1,4 +1,4 @@
-import type { GameNight } from '@/domain/entities/GameNight'
+import type { GameNight, GameNightType } from '@/domain/entities/GameNight'
 import type { Timestamp } from 'firebase/firestore'
 
 export interface GameNightDocument {
@@ -7,6 +7,7 @@ export interface GameNightDocument {
   eventDate: Timestamp
   location: string | null
   hostId: string
+  eventType?: GameNightType
   status: GameNight['status']
   maxAttendees: number | null
   isPublic: boolean
@@ -26,6 +27,7 @@ export function toGameNight(id: string, row: GameNightDocument): GameNight {
     eventDate: row.eventDate.toDate(),
     location: row.location,
     hostId: row.hostId,
+    eventType: row.eventType ?? 'board_game',
     status: row.status,
     maxAttendees: row.maxAttendees,
     isPublic: row.isPublic,

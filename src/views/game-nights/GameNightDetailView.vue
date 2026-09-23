@@ -15,7 +15,8 @@ import LoadingState from '@/components/common/LoadingState.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorState from '@/components/common/ErrorState.vue'
 import EventSessions from '@/components/game-night/EventSessions.vue'
-import type { RsvpStatus } from '@/domain/entities/GameNight'
+import type { GameNightType, RsvpStatus } from '@/domain/entities/GameNight'
+import { gameNightTypeLabel, gameNightTypeOptions } from '@/domain/gameNightTypes'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +33,7 @@ const selectedGameIds = ref<string[]>([])
 const inviteLink = ref('')
 const form = reactive({
   name: '',
+  eventType: 'board_game' as GameNightType,
   description: '',
   eventDate: '',
   eventTime: '',
@@ -59,6 +61,8 @@ const capacityLabel = computed(() => {
     : `${event.value.attendeeCount} of ${event.value.maxAttendees} going`
 })
 const selectedGames = computed(() => gameStore.games.filter((game) => event.value?.selectedGameIds.includes(game.id)))
+const includesBoardGames = computed(() => event.value?.eventType !== 'tabletop_rpg')
+const includesTabletopRpg = computed(() => event.value?.eventType !== 'board_game')
 
 async function loadEvent() {
   const groupId = groupStore.activeGroupId
@@ -80,6 +84,7 @@ async function loadEvent() {
 function startEditing() {
   if (!event.value || !canManage.value) return
   form.name = event.value.name
+  form.eventType = event.value.eventType
   form.description = event.value.description ?? ''
   form.eventDate = format(event.value.eventDate, 'yyyy-MM-dd')
   form.eventTime = format(event.value.eventDate, 'HH:mm')
@@ -94,6 +99,7 @@ async function saveChanges() {
 
   const updated = await store.updateGameNight(groupStore.activeGroupId, event.value.id, {
     name: form.name,
+    eventType: form.eventType,
     description: form.description || null,
     eventDate: new Date(`${form.eventDate}T${form.eventTime}`),
     location: form.location || null,
@@ -170,7 +176,7 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
     <ErrorState v-else-if="store.error && !event" :message="store.error" @retry="loadEvent" />
 
     <template v-else-if="event">
-      <PageHeader :eyebrow="event.status.replace('_', ' ')" :title="event.name" :description="formattedDate">
+      <PageHeader :eyebrow="`${gameNightTypeLabel(event.eventType)} · ${event.status.replace('_', ' ')}`" :title="event.name" :description="formattedDate">
         <template #actions>
           <AppButton variant="secondary" @click="router.push('/game-nights')">Back</AppButton>
           <AppButton v-if="canManage && !editing" @click="startEditing">Edit event</AppButton>
@@ -181,6 +187,21 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
 
       <form v-if="editing" class="space-y-6 rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8" @submit.prevent="saveChanges">
         <AppInput id="edit-event-name" v-model="form.name" label="Event name" required />
+        <fieldset>
+          <legend class="app-label">Event type</legend>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <label
+              v-for="option in gameNightTypeOptions"
+              :key="option.value"
+              class="cursor-pointer rounded-xl border p-4 transition"
+              :class="form.eventType === option.value ? 'border-[#57d2a4]/70 bg-[#57d2a4]/10' : 'border-white/10 bg-white/[0.02] hover:border-white/20'"
+            >
+              <input v-model="form.eventType" type="radio" name="edit-event-type" :value="option.value" class="sr-only">
+              <span class="block font-semibold text-white">{{ option.label }}</span>
+              <span class="mt-1 block text-xs leading-5 text-slate-400">{{ option.description }}</span>
+            </label>
+          </div>
+        </fieldset>
         <div class="grid gap-4 sm:grid-cols-2">
           <AppInput id="edit-event-date" v-model="form.eventDate" type="date" label="Date" required />
           <AppInput id="edit-event-time" v-model="form.eventTime" type="time" label="Time" required />
@@ -216,11 +237,18 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
           <p class="mt-3 leading-7 text-slate-400">{{ event.description || 'No description has been added yet.' }}</p>
           <div class="mt-6 flex flex-wrap gap-2 text-xs font-semibold uppercase tracking-wider">
             <span class="rounded-full bg-[#57d2a4]/10 px-3 py-1.5 text-[#57d2a4]">{{ event.isPublic ? 'Public' : 'Private' }}</span>
+            <span class="rounded-full bg-[#8b5cf6]/10 px-3 py-1.5 text-[#c4b5fd]">{{ gameNightTypeLabel(event.eventType) }}</span>
             <span class="rounded-full bg-white/5 px-3 py-1.5 text-slate-300">{{ isHost ? 'You are the host' : 'Member view' }}</span>
           </div>
         </section>
 
-        <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
+        <section v-if="includesTabletopRpg" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
+          <p class="text-xs font-semibold uppercase tracking-wider text-[#c4b5fd]">Tabletop RPG</p>
+          <h2 class="mt-2 text-lg font-bold text-white">Campaign planning</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-400">Campaigns, player-managed characters, and adventure recaps are coming in the next RPG milestones. You can use the event description for session details in the meantime.</p>
+        </section>
+
+        <section v-if="includesBoardGames" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
           <h2 class="text-lg font-bold text-white">Games for this event</h2>
           <p class="mt-2 text-sm text-slate-400">Choose from the active table’s available library.</p>
 
@@ -245,6 +273,7 @@ watch([() => groupStore.activeGroupId, () => route.params.id], () => void loadEv
         </section>
 
         <EventSessions
+          v-if="includesBoardGames"
           :group-id="groupStore.activeGroupId!"
           :event="event"
           :games="gameStore.games"

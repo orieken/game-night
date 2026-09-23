@@ -39,3 +39,48 @@ test('host creates an event, records a result, and sees the leaderboard', async 
   await expect(player).toContainText('1 completed game')
   await expect(player).toContainText('3')
 })
+
+test('host creates an RPG event and can change it to a mixed night', async ({ page }) => {
+  await loginAsHost(page)
+  await page.goto('/game-nights/create')
+
+  const eventDate = new Date(Date.now() + 172_800_000).toISOString().slice(0, 10)
+  await page.getByText('Tabletop RPG', { exact: true }).click()
+  await expect(page.getByLabel(/Tabletop RPG/)).toBeChecked()
+  await page.getByLabel('Event Name').fill('E2E Symbaroum Session')
+  await page.getByLabel('Date').fill(eventDate)
+  await page.getByLabel('Time').fill('19:00')
+  await page.getByRole('button', { name: 'Create Event' }).click()
+
+  const eventLink = page.getByRole('link', { name: /E2E Symbaroum Session/ })
+  await expect(eventLink).toContainText('Tabletop RPG')
+  await eventLink.click()
+
+  await expect(page.getByText('Campaign planning')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Games for this event' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Edit event' }).click()
+  await page.getByText('Mixed night', { exact: true }).click()
+  await expect(page.getByLabel(/Mixed night/)).toBeChecked()
+  await page.getByRole('button', { name: 'Save changes' }).click()
+
+  await expect(page.getByText('Game night updated.')).toBeVisible()
+  await expect(page.getByText('Mixed night', { exact: true })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Games for this event' })).toBeVisible()
+})
+
+test('filters upcoming events and history by event type', async ({ page }) => {
+  await loginAsHost(page)
+  await page.goto('/game-nights')
+
+  await expect(page.getByRole('link', { name: /Mixed Table Night/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Archived Symbaroum Adventure/ })).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'History' }).click()
+  await expect(page.getByRole('link', { name: /Archived Symbaroum Adventure/ })).toContainText('Tabletop RPG')
+  await expect(page.getByRole('link', { name: /Mixed Table Night/ })).toHaveCount(0)
+
+  await page.getByLabel('Event type').selectOption('board_game')
+  await expect(page.getByText('No matching events')).toBeVisible()
+  await page.getByRole('button', { name: 'Reset filters' }).click()
+  await expect(page.getByRole('link', { name: /Mixed Table Night/ })).toBeVisible()
+})

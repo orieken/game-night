@@ -31,7 +31,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Keep imported source metadata separate from the editable local game fields.
 - [x] Preserve manual game creation and editing as a fallback.
 - [x] Prevent duplicate imports of the same BGG game into one group, while allowing an intentional second physical copy later.
-- [ ] Add required “Powered by BGG” attribution and a link to the source game page.
+- [x] Add required “Powered by BGG” attribution and a link to the source game page.
 - [ ] Add unit tests for XML parsing, mapping, duplicate detection, and error handling.
 - [x] Add emulator-backed E2E tests for search, import, duplicate prevention, and manual fallback.
 - [x] Document local token setup, Netlify token setup, attribution, and non-commercial-use constraints.
@@ -41,8 +41,9 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Confirm D&D 5e and 5e-derived settings as the initial RPG family.
 - [x] Identify Symbaroum as the additional RPG system the group may play.
 - [x] Support both original Symbaroum and the 5e-based Ruins of Symbaroum adaptation.
-- [ ] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
-- [ ] Update event creation, detail, cards, filters, and history to present each event type clearly.
+- [x] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
+- [x] Update event creation, detail, and cards to present each event type clearly.
+- [x] Add event-type filters and type-aware history views.
 - [ ] Add campaign entities and Firestore repositories under each group.
 - [ ] Store campaign name, description, system, variant/edition, status, DM IDs, member IDs, optional external links, and optional character-field definitions.
 - [ ] Add campaign create, edit, archive, list, and detail views.

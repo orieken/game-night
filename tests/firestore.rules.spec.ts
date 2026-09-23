@@ -193,6 +193,14 @@ describe('Firestore security rules', () => {
     }
 
     await assertSucceeds(setDoc(eventRef, event))
+    await assertSucceeds(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-rpg'), {
+      ...event,
+      eventType: 'tabletop_rpg'
+    }))
+    await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-invalid-type'), {
+      ...event,
+      eventType: 'video_game'
+    }))
     await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-2'), {
       ...event,
       hostId: 'owner-1'
@@ -200,6 +208,8 @@ describe('Firestore security rules', () => {
 
     await assertSucceeds(updateDoc(eventRef, { name: 'Updated Friday games' }))
     await assertSucceeds(updateDoc(eventRef, { selectedGameIds: ['azul'] }))
+    await assertSucceeds(updateDoc(eventRef, { eventType: 'mixed' }))
+    await assertFails(updateDoc(eventRef, { eventType: 'video_game' }))
     await assertFails(updateDoc(eventRef, { selectedGameIds: 'azul' }))
     await assertFails(updateDoc(eventRef, { hostId: 'owner-1' }))
 

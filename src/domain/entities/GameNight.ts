@@ -1,3 +1,5 @@
+export type GameNightType = 'board_game' | 'tabletop_rpg' | 'mixed'
+
 export interface GameNight {
   id: string
   name: string
@@ -5,6 +7,7 @@ export interface GameNight {
   eventDate: Date
   location: string | null
   hostId: string
+  eventType: GameNightType
   status: 'upcoming' | 'in_progress' | 'completed' | 'cancelled'
   maxAttendees: number | null
   isPublic: boolean

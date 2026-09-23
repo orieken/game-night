@@ -136,6 +136,24 @@ export default async function globalSetup() {
     isPublic: false,
     invitedUserIds: []
   })
+  eventsBatch.set(doc(groupRef, 'events', 'mixed-upcoming'), {
+    ...eventDefaults,
+    name: 'Mixed Table Night',
+    eventType: 'mixed',
+    maxAttendees: 6,
+    isPublic: false,
+    invitedUserIds: []
+  })
+  eventsBatch.set(doc(groupRef, 'events', 'rpg-history'), {
+    ...eventDefaults,
+    name: 'Archived Symbaroum Adventure',
+    eventType: 'tabletop_rpg',
+    eventDate: Timestamp.fromDate(new Date('2025-01-15T18:00:00.000Z')),
+    status: 'completed',
+    maxAttendees: 5,
+    isPublic: false,
+    invitedUserIds: []
+  })
   await eventsBatch.commit()
   await deleteApp(app)
 }

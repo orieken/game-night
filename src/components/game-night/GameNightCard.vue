@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import type { GameNight } from '@/domain/entities/GameNight'
 import { format } from 'date-fns'
+import { gameNightTypeLabel } from '@/domain/gameNightTypes'
 
 const props = defineProps<{
   gameNight: GameNight
@@ -49,7 +50,7 @@ const statusColor = computed(() => {
 
     <div class="flex items-center justify-between border-t border-white/10 pt-4">
       <div class="text-xs text-slate-400">
-        {{ gameNight.isPublic ? 'Public event' : 'Private event' }} · {{ gameNight.attendeeCount }} going
+        {{ gameNightTypeLabel(gameNight.eventType) }} · {{ gameNight.isPublic ? 'Public event' : 'Private event' }} · {{ gameNight.attendeeCount }} going
       </div>
       <span class="text-[#57d2a4] transition group-hover:translate-x-1" aria-hidden="true">→</span>
     </div>

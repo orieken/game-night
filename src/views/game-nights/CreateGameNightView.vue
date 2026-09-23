@@ -9,6 +9,8 @@ import AppButton from '@/components/common/AppButton.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import ErrorState from '@/components/common/ErrorState.vue'
 import { useToastStore } from '@/stores/toastStore'
+import { gameNightTypeOptions } from '@/domain/gameNightTypes'
+import type { GameNightType } from '@/domain/entities/GameNight'
 
 const router = useRouter()
 const store = useGameNightStore()
@@ -18,6 +20,7 @@ const toastStore = useToastStore()
 
 const form = ref({
   name: '',
+  eventType: 'board_game' as GameNightType,
   description: '',
   eventDate: '',
   eventTime: '',
@@ -38,6 +41,7 @@ const handleSubmit = async () => {
     eventDate: dateTime,
     location: form.value.location || null,
     hostId: authStore.user.id,
+    eventType: form.value.eventType,
     status: 'upcoming',
     maxAttendees: form.value.maxAttendees,
     isPublic: form.value.isPublic,
@@ -62,6 +66,21 @@ const handleSubmit = async () => {
     <div class="app-surface rounded-2xl p-6 shadow-xl shadow-black/10 sm:p-8">
       <form class="space-y-6" @submit.prevent="handleSubmit">
         <ErrorState v-if="store.error" :message="store.error" :retryable="false" />
+        <fieldset>
+          <legend class="app-label">Event type</legend>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <label
+              v-for="option in gameNightTypeOptions"
+              :key="option.value"
+              class="cursor-pointer rounded-xl border p-4 transition"
+              :class="form.eventType === option.value ? 'border-[#57d2a4]/70 bg-[#57d2a4]/10' : 'border-white/10 bg-white/[0.02] hover:border-white/20'"
+            >
+              <input v-model="form.eventType" type="radio" name="event-type" :value="option.value" class="sr-only">
+              <span class="block font-semibold text-white">{{ option.label }}</span>
+              <span class="mt-1 block text-xs leading-5 text-slate-400">{{ option.description }}</span>
+            </label>
+          </div>
+        </fieldset>
         <AppInput
           id="name"
           v-model="form.name"
