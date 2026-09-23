@@ -40,7 +40,7 @@ Make it easy for a private group to add accurate board-game information to its s
 
 - [x] Confirm D&D 5e and 5e-derived settings as the initial RPG family.
 - [x] Identify Symbaroum as the additional RPG system the group may play.
-- [ ] Confirm whether the group will use original Symbaroum, the 5e-based Ruins of Symbaroum adaptation, or both.
+- [x] Support both original Symbaroum and the 5e-based Ruins of Symbaroum adaptation.
 - [ ] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
 - [ ] Update event creation, detail, cards, filters, and history to present each event type clearly.
 - [ ] Add campaign entities and Firestore repositories under each group.
@@ -74,6 +74,10 @@ Make it easy for a private group to add accurate board-game information to its s
 
 ## BoardGameGeek API registration description
 
+### API client
+
+`Game Night web app — https://rieken-game-night.netlify.app/`
+
 ### Short version
 
 Game Night is a small, non-commercial web app for a private group of friends and family to organize board-game nights. Members maintain a shared game library, schedule events, send RSVP links, select games, record completed plays, and view group history and standings. We would use the BoardGameGeek XML API to let organizers search for games and import basic catalog metadata such as the title, cover image, player count, playing time, categories, description, and BoardGameGeek ID. Imported data is displayed with BoardGameGeek attribution, requests are made through a server-side proxy using an application token, and the app does not sell or redistribute the data.
@@ -88,6 +92,5 @@ API requests would be made through a server-side Netlify Function so the applica
 
 ## Open decisions
 
-- Will the group use original Symbaroum, the 5e-based Ruins of Symbaroum adaptation, or both?
 - Who may publish a public story highlight: only the DM, or the DM plus the player who wrote it?
 - Should multiple physical copies or editions of the same BGG title be supported in the first catalog release?
