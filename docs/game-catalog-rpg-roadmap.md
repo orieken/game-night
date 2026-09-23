@@ -12,7 +12,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - Continue supporting manual game entry when a catalog match is unavailable.
 - Keep board games and tabletop RPG nights in the same app because they share groups, scheduling, invitations, RSVPs, attendance, and history.
 - Model board-game, tabletop RPG, and mixed events explicitly.
-- Support D&D 5e and 5e-derived settings without coupling campaign storage to one edition or publisher.
+- Support D&D 5e, 5e-derived settings, and Symbaroum without coupling campaign storage to one rules engine, edition, or publisher.
 - Start with lightweight, system-flexible campaigns, player-managed character summaries, and adventure logs rather than building a complete D&D character manager.
 - Make full recaps visible to campaign players and reserve an optional, deliberately published public story highlight for a later release.
 - Treat optional SRD rules lookup as a later enhancement, not a dependency of campaign tracking.
@@ -39,7 +39,8 @@ Make it easy for a private group to add accurate board-game information to its s
 ## Phase 2 — Event types and campaigns
 
 - [x] Confirm D&D 5e and 5e-derived settings as the initial RPG family.
-- [ ] Identify the possible “S” platform or rules system before defining any system-specific fields.
+- [x] Identify Symbaroum as the additional RPG system the group may play.
+- [ ] Confirm whether the group will use original Symbaroum, the 5e-based Ruins of Symbaroum adaptation, or both.
 - [ ] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
 - [ ] Update event creation, detail, cards, filters, and history to present each event type clearly.
 - [ ] Add campaign entities and Firestore repositories under each group.
@@ -53,7 +54,7 @@ Make it easy for a private group to add accurate board-game information to its s
 
 - [x] Allow players to manage their own character details; allow DMs to manage campaign membership and archival status.
 - [ ] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
-- [ ] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, or differently named stats without implementing game-rule calculations.
+- [ ] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, corruption, abilities, or differently named stats without implementing game-rule calculations.
 - [ ] Add character create, edit, retire, and campaign-roster views.
 - [ ] Add campaign session logs linked to their scheduled events.
 - [ ] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
@@ -87,6 +88,6 @@ API requests would be made through a server-side Netlify Function so the applica
 
 ## Open decisions
 
-- What is the “S” platform or RPG system the group may use: Shard Tabletop, Shadowdark, Savage Worlds, or something else?
+- Will the group use original Symbaroum, the 5e-based Ruins of Symbaroum adaptation, or both?
 - Who may publish a public story highlight: only the DM, or the DM plus the player who wrote it?
 - Should multiple physical copies or editions of the same BGG title be supported in the first catalog release?
