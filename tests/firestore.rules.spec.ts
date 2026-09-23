@@ -171,6 +171,70 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(memberDatabase, 'groups', 'group-1', 'games', 'catan'), game))
   })
 
+  it('lets organizers create campaigns and assigned DMs maintain them', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'dm-1', role: 'member' },
+      { id: 'member-1', role: 'member' }
+    ])
+
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const dmDatabase = testEnvironment.authenticatedContext('dm-1').firestore()
+    const memberDatabase = testEnvironment.authenticatedContext('member-1').firestore()
+    const outsiderDatabase = testEnvironment.authenticatedContext('outsider-1').firestore()
+    const campaignRef = doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1')
+    const campaign = {
+      name: 'The Darkest Star',
+      description: 'A Symbaroum campaign.',
+      system: 'Symbaroum',
+      variant: 'Original rules',
+      status: 'active',
+      dmIds: ['owner-1', 'dm-1'],
+      memberIds: ['owner-1', 'dm-1', 'member-1'],
+      externalLinks: [],
+      characterFieldDefinitions: [],
+      createdById: 'owner-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    await assertSucceeds(setDoc(campaignRef, campaign))
+    await assertSucceeds(getDoc(doc(memberDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1')))
+    await assertFails(getDoc(doc(outsiderDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1')))
+    await assertSucceeds(updateDoc(doc(dmDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1'), {
+      description: 'Updated by an assigned DM.',
+      updatedAt: new Date()
+    }))
+    await assertFails(updateDoc(doc(memberDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1'), {
+      description: 'A player edit.',
+      updatedAt: new Date()
+    }))
+    await assertFails(updateDoc(campaignRef, { status: 'unknown', updatedAt: new Date() }))
+    await assertFails(updateDoc(campaignRef, { createdAt: new Date('2030-01-01'), updatedAt: new Date() }))
+    await assertFails(deleteDoc(campaignRef))
+  })
+
+  it('rejects campaigns that do not assign the creating organizer as a DM and member', async () => {
+    await seedGroup('group-1', 'owner-1')
+    const database = testEnvironment.authenticatedContext('owner-1').firestore()
+    const campaign = {
+      name: 'Invalid campaign',
+      description: null,
+      system: 'D&D 5e',
+      variant: null,
+      status: 'active',
+      dmIds: ['someone-else'],
+      memberIds: ['someone-else'],
+      externalLinks: [],
+      characterFieldDefinitions: [],
+      createdById: 'owner-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    await assertFails(setDoc(doc(database, 'groups', 'group-1', 'campaigns', 'campaign-1'), campaign))
+  })
+
   it('requires an organizer to create an event as themselves', async () => {
     await seedGroup('group-1', 'owner-1', [
       { id: 'owner-1', role: 'owner' },

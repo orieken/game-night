@@ -44,8 +44,8 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
 - [x] Update event creation, detail, and cards to present each event type clearly.
 - [x] Add event-type filters and type-aware history views.
-- [ ] Add campaign entities and Firestore repositories under each group.
-- [ ] Store campaign name, description, system, variant/edition, status, DM IDs, member IDs, optional external links, and optional character-field definitions.
+- [x] Add campaign entities and Firestore repositories under each group.
+- [x] Store campaign name, description, system, variant/edition, status, DM IDs, member IDs, optional external links, and optional character-field definitions.
 - [ ] Add campaign create, edit, archive, list, and detail views.
 - [ ] Allow RPG and mixed events to link to a campaign.
 - [ ] Reuse existing invite, RSVP, capacity, attendance, and share-link behavior for RPG events.
