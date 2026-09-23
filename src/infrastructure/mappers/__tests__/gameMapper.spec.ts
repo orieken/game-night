@@ -15,6 +15,7 @@ describe('gameMapper', () => {
     category: ['Strategy'],
     imageUrl: 'http://test.com/img.jpg',
     bggId: 12345,
+    catalogData: null,
     isAvailable: true,
     createdAt: timestamp,
     updatedAt: timestamp
@@ -32,6 +33,7 @@ describe('gameMapper', () => {
       category: ['Strategy'],
       imageUrl: 'http://test.com/img.jpg',
       bggId: 12345,
+      catalogData: null,
       isAvailable: true,
       createdAt: date,
       updatedAt: date

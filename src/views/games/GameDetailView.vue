@@ -90,6 +90,11 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadGame, { immed
           <p class="leading-relaxed text-slate-300">
             {{ gameStore.currentGame.description || 'No description available.' }}
           </p>
+          <p v-if="gameStore.currentGame.catalogData" class="mt-5 text-xs text-slate-400">
+            Game information powered by
+            <a :href="gameStore.currentGame.catalogData.sourceUrl" target="_blank" rel="noreferrer" class="font-semibold text-[#57d2a4] hover:text-[#85e4c3]">BoardGameGeek</a>
+            <template v-if="gameStore.currentGame.catalogData.yearPublished"> · Published {{ gameStore.currentGame.catalogData.yearPublished }}</template>
+          </p>
         </div>
       </div>
     </div>

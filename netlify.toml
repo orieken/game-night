@@ -2,6 +2,9 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  directory = "netlify/functions"
+
 [build.environment]
   # Firebase's web configuration is embedded in every browser build by design.
   # Authentication and Firestore Security Rules protect data access.

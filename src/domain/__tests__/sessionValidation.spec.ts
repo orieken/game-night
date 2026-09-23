@@ -13,6 +13,7 @@ const game: Game = {
   category: ['Abstract'],
   imageUrl: null,
   bggId: null,
+  catalogData: null,
   isAvailable: true,
   createdAt: new Date(),
   updatedAt: new Date()

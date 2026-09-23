@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": [
+    "netlify/functions/**/*.ts",
+    "src/domain/entities/GameCatalog.ts",
+    "src/infrastructure/bgg/bggXml.ts"
+  ]
+}

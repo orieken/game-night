@@ -31,6 +31,7 @@ export const gameRepository: IGameRepository = {
       category: game.category,
       imageUrl: game.imageUrl,
       bggId: game.bggId,
+      catalogData: game.catalogData,
       isAvailable: game.isAvailable,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -50,6 +51,7 @@ export const gameRepository: IGameRepository = {
       category: game.category,
       imageUrl: game.imageUrl,
       bggId: game.bggId,
+      catalogData: game.catalogData,
       isAvailable: game.isAvailable
     }).filter(([, value]) => value !== undefined))
     const gameRef = doc(gamesCollection(groupId), id)

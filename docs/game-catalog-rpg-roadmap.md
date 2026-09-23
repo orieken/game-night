@@ -22,19 +22,19 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Draft the non-commercial application description for BoardGameGeek API registration.
 - [ ] Register the application with BoardGameGeek and obtain an application token.
 - [ ] Add the BGG token to local and Netlify server-side environment configuration; never expose it through a `VITE_` variable.
-- [ ] Add a Netlify Function that authenticates with BGG and converts XML responses into the app's JSON format.
-- [ ] Add typed catalog entities and an interface so the UI does not depend directly on BGG response shapes.
-- [ ] Implement debounced catalog search with a minimum query length and useful timeout/error handling.
-- [ ] Show title, publication year, cover, player count, and playing time in search results so similarly named games can be distinguished.
-- [ ] Fetch full details only after a search result is selected.
-- [ ] Map supported BGG fields into read-only source metadata: ID, canonical name, description, images, player counts, playing time, categories, mechanics, publication year, and complexity weight.
-- [ ] Keep local fields separate: availability, group notes, copy/edition notes, expansions owned, and condition/missing-piece notes.
-- [ ] Preserve manual game creation and editing as a fallback.
-- [ ] Prevent duplicate imports of the same BGG game into one group, while allowing an intentional second physical copy later.
+- [x] Add a Netlify Function that authenticates with BGG and converts XML responses into the app's JSON format.
+- [x] Add typed catalog entities and an interface so the UI does not depend directly on BGG response shapes.
+- [x] Implement debounced catalog search with a minimum query length and useful timeout/error handling.
+- [x] Show title, publication year, cover, player count, and playing time in search results so similarly named games can be distinguished.
+- [x] Fetch full details only after a search result is selected.
+- [x] Map supported BGG fields into preserved source metadata: ID, canonical name, description, images, player counts, playing time, categories, mechanics, publication year, and complexity weight.
+- [x] Keep imported source metadata separate from the editable local game fields.
+- [x] Preserve manual game creation and editing as a fallback.
+- [x] Prevent duplicate imports of the same BGG game into one group, while allowing an intentional second physical copy later.
 - [ ] Add required “Powered by BGG” attribution and a link to the source game page.
 - [ ] Add unit tests for XML parsing, mapping, duplicate detection, and error handling.
-- [ ] Add emulator-backed E2E tests for search, import, manual fallback, and duplicate prevention.
-- [ ] Document local token setup, Netlify token setup, attribution, and non-commercial-use constraints.
+- [x] Add emulator-backed E2E tests for search, import, duplicate prevention, and manual fallback.
+- [x] Document local token setup, Netlify token setup, attribution, and non-commercial-use constraints.
 
 ## Phase 2 — Event types and campaigns
 

@@ -73,6 +73,7 @@ A social gaming platform that transforms casual game nights into engaging compet
 - **Hosting**: Netlify
 - **Production URL**: [https://rieken-game-night.netlify.app/](https://rieken-game-night.netlify.app/)
 - **Environment variables**: Firebase browser configuration uses the `VITE_FIREBASE_*` names from `.env.example`. Configure these in Netlify so Vite exposes them to the client build.
+- **BoardGameGeek catalog**: Set `BGG_API_TOKEN` as a server-side Netlify environment variable. It must not use the `VITE_` prefix. Run the app through `npx netlify dev` when testing live BGG search locally so the `/api/bgg/*` functions are available.
 - **CI/CD**: GitHub Actions with automated testing
 - **Environment Management**: Staging and production branches
 

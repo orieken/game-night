@@ -1,3 +1,5 @@
+import type { GameCatalogReference } from '@/domain/entities/GameCatalog'
+
 export interface Game {
   id: string
   name: string
@@ -9,6 +11,7 @@ export interface Game {
   category: string[]
   imageUrl: string | null
   bggId: number | null
+  catalogData: GameCatalogReference | null
   isAvailable: boolean
   createdAt: Date
   updatedAt: Date
