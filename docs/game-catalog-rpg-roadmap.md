@@ -6,12 +6,15 @@ Make it easy for a private group to add accurate board-game information to its s
 
 ## Product decisions
 
+- Keep the app private, non-commercial, and intended for a friendly family group.
 - Use BoardGameGeek as the source for board-game catalog searches and imported metadata.
 - Keep BoardGameGeek-sourced data distinct from local fields such as availability and group notes.
 - Continue supporting manual game entry when a catalog match is unavailable.
 - Keep board games and tabletop RPG nights in the same app because they share groups, scheduling, invitations, RSVPs, attendance, and history.
 - Model board-game, tabletop RPG, and mixed events explicitly.
-- Start with lightweight campaigns, character summaries, and adventure logs rather than building a complete D&D character manager.
+- Support D&D 5e and 5e-derived settings without coupling campaign storage to one edition or publisher.
+- Start with lightweight, system-flexible campaigns, player-managed character summaries, and adventure logs rather than building a complete D&D character manager.
+- Make full recaps visible to campaign players and reserve an optional, deliberately published public story highlight for a later release.
 - Treat optional SRD rules lookup as a later enhancement, not a dependency of campaign tracking.
 
 ## Phase 1 — BoardGameGeek catalog import
@@ -35,11 +38,12 @@ Make it easy for a private group to add accurate board-game information to its s
 
 ## Phase 2 — Event types and campaigns
 
-- [ ] Confirm the RPG systems and editions the group uses.
+- [x] Confirm D&D 5e and 5e-derived settings as the initial RPG family.
+- [ ] Identify the possible “S” platform or rules system before defining any system-specific fields.
 - [ ] Add `board_game`, `tabletop_rpg`, and `mixed` event types with backward-compatible defaults for existing events.
 - [ ] Update event creation, detail, cards, filters, and history to present each event type clearly.
 - [ ] Add campaign entities and Firestore repositories under each group.
-- [ ] Store campaign name, description, system, edition, status, DM IDs, member IDs, and optional external links.
+- [ ] Store campaign name, description, system, variant/edition, status, DM IDs, member IDs, optional external links, and optional character-field definitions.
 - [ ] Add campaign create, edit, archive, list, and detail views.
 - [ ] Allow RPG and mixed events to link to a campaign.
 - [ ] Reuse existing invite, RSVP, capacity, attendance, and share-link behavior for RPG events.
@@ -47,12 +51,15 @@ Make it easy for a private group to add accurate board-game information to its s
 
 ## Phase 3 — Characters and adventure logs
 
-- [ ] Decide whether players manage their own characters or DMs manage the whole party.
-- [ ] Add lightweight character summaries: name, player, class, subclass, level, species/ancestry, pronouns, status, portrait URL, external sheet URL, and public notes.
+- [x] Allow players to manage their own character details; allow DMs to manage campaign membership and archival status.
+- [ ] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
+- [ ] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, or differently named stats without implementing game-rule calculations.
 - [ ] Add character create, edit, retire, and campaign-roster views.
 - [ ] Add campaign session logs linked to their scheduled events.
-- [ ] Record session number, title, date, attendees, characters present, public recap, milestone/XP progress, loot, quests, and next-session hooks.
+- [ ] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
 - [ ] Keep private DM notes in separately protected documents that ordinary campaign members cannot read.
+- [ ] Add an optional short public story highlight that must be explicitly published and contains no private recap or DM-note fields.
+- [ ] Publish public highlights through separate sanitized documents/routes so anonymous readers never receive the private campaign document.
 - [ ] Add campaign history and RPG attendance statistics without mixing RPG sessions into the competitive board-game leaderboard.
 - [ ] Add Firestore rules and emulator tests for player-owned character edits, DM controls, public recaps, and private notes.
 - [ ] Add E2E coverage for campaign creation, RPG scheduling, character management, and session recaps.
@@ -80,8 +87,6 @@ API requests would be made through a server-side Netlify Function so the applica
 
 ## Open decisions
 
-- Is the app expected to remain strictly private and non-commercial?
-- Which RPG systems and editions should be supported first?
-- Should players edit their own character summaries, or should DMs manage the entire party?
-- Should campaign recaps be visible to all group members while DM notes remain private?
+- What is the “S” platform or RPG system the group may use: Shard Tabletop, Shadowdark, Savage Worlds, or something else?
+- Who may publish a public story highlight: only the DM, or the DM plus the player who wrote it?
 - Should multiple physical copies or editions of the same BGG title be supported in the first catalog release?
