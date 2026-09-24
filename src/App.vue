@@ -5,13 +5,13 @@ import AppShell from '@/components/layout/AppShell.vue'
 import ToastRegion from '@/components/common/ToastRegion.vue'
 
 const route = useRoute()
-const isAuthenticationRoute = computed(() => route.meta.requiresGuest === true)
+const isStandaloneRoute = computed(() => route.meta.requiresGuest === true || route.meta.publicPage === true)
 </script>
 
 <template>
   <ToastRegion />
   <router-view v-slot="{ Component }">
-    <component :is="Component" v-if="isAuthenticationRoute" />
+    <component :is="Component" v-if="isStandaloneRoute" />
     <AppShell v-else>
       <component :is="Component" />
     </AppShell>

@@ -16,6 +16,7 @@ import { useCharacterStore } from '@/stores/characterStore'
 import CharacterCard from '@/components/campaign/CharacterCard.vue'
 import { useAdventureLogStore } from '@/stores/adventureLogStore'
 import AdventureLogCard from '@/components/campaign/AdventureLogCard.vue'
+import { calculateCampaignStatistics } from '@/domain/campaignStatistics'
 
 const route = useRoute()
 const router = useRouter()
@@ -41,6 +42,11 @@ const players = computed(() => groupStore.members.filter((member) => campaign.va
 const linkedEvents = computed(() => gameNightStore.gameNights
   .filter((event) => event.campaignId === campaign.value?.id)
   .sort((left, right) => left.eventDate.getTime() - right.eventDate.getTime()))
+const statistics = computed(() => calculateCampaignStatistics(adventureLogStore.logs))
+const attendanceRows = computed(() => statistics.value.attendance.map((item) => ({
+  ...item,
+  name: groupStore.members.find((member) => member.userId === item.userId)?.displayName ?? 'Former campaign member'
+})))
 
 async function loadCampaign() {
   const groupId = groupStore.activeGroupId
@@ -86,6 +92,11 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadCampaign, { i
           <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <h2 class="text-lg font-bold text-white">About this campaign</h2>
             <p class="mt-3 whitespace-pre-wrap leading-7 text-slate-300">{{ campaign.description || 'No campaign description has been added yet.' }}</p>
+          </section>
+          <section v-if="canViewRoster" class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8" aria-labelledby="campaign-statistics-heading">
+            <div><h2 id="campaign-statistics-heading" class="text-lg font-bold text-white">Campaign history and attendance</h2><p class="mt-1 text-sm text-slate-400">RPG session activity is tracked here and does not affect the board-game leaderboard.</p></div>
+            <dl class="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4"><div class="rounded-xl bg-white/[0.04] p-4"><dt class="text-xs uppercase tracking-wider text-slate-400">Recorded sessions</dt><dd class="mt-2 text-2xl font-black text-white">{{ statistics.recordedSessions }}</dd></div><div class="rounded-xl bg-white/[0.04] p-4"><dt class="text-xs uppercase tracking-wider text-slate-400">Total attendances</dt><dd class="mt-2 text-2xl font-black text-[#57d2a4]">{{ statistics.totalAttendances }}</dd></div><div class="rounded-xl bg-white/[0.04] p-4"><dt class="text-xs uppercase tracking-wider text-slate-400">Players joined</dt><dd class="mt-2 text-2xl font-black text-[#c4b5fd]">{{ statistics.uniquePlayers }}</dd></div><div class="rounded-xl bg-white/[0.04] p-4"><dt class="text-xs uppercase tracking-wider text-slate-400">Characters seen</dt><dd class="mt-2 text-2xl font-black text-[#ff877c]">{{ statistics.uniqueCharacters }}</dd></div></dl>
+            <div v-if="statistics.recordedSessions" class="mt-5 grid gap-5 border-t border-white/10 pt-5 sm:grid-cols-2"><div><h3 class="text-sm font-bold text-white">Attendance by player</h3><ul class="mt-3 space-y-2"><li v-for="item in attendanceRows" :key="item.userId" class="flex justify-between rounded-xl bg-white/[0.04] px-4 py-3 text-sm"><span class="text-slate-200">{{ item.name }}</span><span class="font-semibold text-[#57d2a4]">{{ item.sessions }} {{ item.sessions === 1 ? 'session' : 'sessions' }}</span></li></ul></div><div><h3 class="text-sm font-bold text-white">Latest recorded session</h3><p class="mt-3 rounded-xl bg-white/[0.04] px-4 py-3 text-sm text-slate-300">{{ statistics.latestSessionDate ? format(statistics.latestSessionDate, 'MMMM d, yyyy') : 'No sessions yet' }}</p></div></div>
           </section>
           <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">

@@ -24,6 +24,7 @@ import VaultCharacterFormView from '@/views/characters/VaultCharacterFormView.vu
 import VaultCharacterDetailView from '@/views/characters/VaultCharacterDetailView.vue'
 import AdventureLogFormView from '@/views/adventure-logs/AdventureLogFormView.vue'
 import AdventureLogDetailView from '@/views/adventure-logs/AdventureLogDetailView.vue'
+import PublicStoryHighlightView from '@/views/public/PublicStoryHighlightView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,12 @@ const router = createRouter({
       name: 'register',
       component: RegisterView,
       meta: { requiresGuest: true, title: 'Create account' }
+    },
+    {
+      path: '/stories/:groupId/:campaignId/:logId',
+      name: 'public-story-highlight',
+      component: PublicStoryHighlightView,
+      meta: { publicPage: true, title: 'Campaign story' }
     },
     {
       path: '/',

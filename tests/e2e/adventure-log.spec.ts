@@ -41,6 +41,26 @@ test('a campaign manager records and edits an adventure that players can read', 
   await page.getByRole('button', { name: 'Save entry' }).click()
   await expect(page.getByText('The party crossed the forest edge and secured the ruined watchtower.')).toBeVisible()
 
+  await page.getByRole('textbox', { name: 'Public story highlight' }).fill('The party found a ruined watchtower where the ravens spoke in unison.')
+  await page.getByRole('button', { name: 'Publish story' }).click()
+  await expect(page.getByText('Public story highlight published.')).toBeVisible()
+  const publicPath = await page.getByRole('link', { name: /View public page/ }).getAttribute('href')
+  expect(publicPath).toBeTruthy()
+
+  const publicContext = await browser.newContext()
+  const publicPage = await publicContext.newPage()
+  await publicPage.goto(publicPath!)
+  await expect(publicPage.getByRole('heading', { name: 'Into Davokar', exact: true })).toBeVisible()
+  await expect(publicPage.getByText('The party found a ruined watchtower where the ravens spoke in unison.')).toBeVisible()
+  await expect(publicPage.getByText('The party crossed the forest edge and secured the ruined watchtower.')).toHaveCount(0)
+  await expect(publicPage.getByText('The silver key awakens the sleeping sorcerer.')).toHaveCount(0)
+
+  await page.getByRole('button', { name: 'Unpublish' }).click()
+  await expect(page.getByText('Public story highlight unpublished.')).toBeVisible()
+  await publicPage.reload()
+  await expect(publicPage.getByText('This public story is unavailable or has been unpublished.')).toBeVisible()
+  await publicContext.close()
+
   const guestContext = await browser.newContext()
   const guestPage = await guestContext.newPage()
   await loginAsGuest(guestPage)
@@ -51,4 +71,10 @@ test('a campaign manager records and edits an adventure that players can read', 
   await expect(guestPage.getByRole('heading', { name: 'Private DM notes' })).toHaveCount(0)
   await expect(guestPage.getByRole('button', { name: 'Edit entry' })).toHaveCount(0)
   await guestContext.close()
+
+  await page.getByRole('button', { name: 'Back to campaign' }).click()
+  const campaignStats = page.getByRole('region', { name: 'Campaign history and attendance' })
+  await expect(campaignStats.getByText('Recorded sessions').locator('..').getByText('1', { exact: true })).toBeVisible()
+  await expect(campaignStats.getByText(E2E_GUEST.displayName)).toBeVisible()
+  await expect(campaignStats.getByText('1 session')).toHaveCount(2)
 })

@@ -402,6 +402,41 @@ describe('Firestore security rules', () => {
     await assertFails(deleteDoc(ownerNoteRef))
   })
 
+  it('publishes only sanitized story highlights and revokes anonymous access when unpublished', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'player-1', role: 'member' }
+    ])
+    await seedCampaign('group-1', 'campaign-1', { memberIds: ['owner-1', 'player-1'] })
+    await seedEvent('group-1', 'event-1', { eventType: 'tabletop_rpg', campaignId: 'campaign-1' })
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const playerDatabase = testEnvironment.authenticatedContext('player-1').firestore()
+    const anonymousDatabase = testEnvironment.unauthenticatedContext().firestore()
+    await setDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1'), {
+      eventId: 'event-1', sessionNumber: 1, title: 'Into Davokar', sessionDate: new Date(), attendeeIds: ['owner-1', 'player-1'], characterIds: [],
+      recap: 'Private full recap.', progress: null, loot: null, quests: null, memorableMoments: [], nextSessionHooks: null,
+      createdById: 'owner-1', createdAt: new Date(), updatedAt: new Date()
+    })
+    const ownerHighlightRef = doc(ownerDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-1')
+    const highlight = {
+      groupId: 'group-1', campaignId: 'campaign-1', adventureLogId: 'log-1', campaignName: 'The Darkest Star',
+      sessionNumber: 1, title: 'Into Davokar', sessionDate: new Date(), excerpt: 'A raven offered a warning.',
+      published: true, publishedById: 'owner-1', publishedAt: new Date(), updatedAt: new Date()
+    }
+    await assertSucceeds(getDoc(ownerHighlightRef))
+    await assertSucceeds(setDoc(ownerHighlightRef, highlight))
+    await assertSucceeds(getDoc(doc(anonymousDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-1')))
+    await assertSucceeds(getDoc(doc(playerDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-1')))
+    await assertFails(setDoc(doc(playerDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-2'), { ...highlight, adventureLogId: 'log-2', publishedById: 'player-1' }))
+    await assertFails(updateDoc(ownerHighlightRef, { recap: 'Leaked recap.', updatedAt: new Date() }))
+    await assertFails(updateDoc(ownerHighlightRef, { publishedAt: new Date(0), updatedAt: new Date() }))
+    await assertSucceeds(updateDoc(ownerHighlightRef, { published: false, publishedById: 'owner-1', updatedAt: new Date() }))
+    await assertFails(getDoc(doc(anonymousDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-1')))
+    await assertFails(getDoc(doc(playerDatabase, 'publicCampaignHighlights', 'group-1', 'campaigns', 'campaign-1', 'sessions', 'log-1')))
+    await assertFails(getDoc(doc(anonymousDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1')))
+    await assertFails(deleteDoc(ownerHighlightRef))
+  })
+
   it('requires an organizer to create an event as themselves', async () => {
     await seedGroup('group-1', 'owner-1', [
       { id: 'owner-1', role: 'owner' },

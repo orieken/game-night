@@ -36,6 +36,69 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Public story highlights are deliberately sanitized copies. They live
+    // outside private campaign documents so anonymous readers never receive
+    // recaps, character data, or DM notes.
+    match /publicCampaignHighlights/{groupId}/campaigns/{campaignId}/sessions/{logId} {
+      function highlightCampaignPath() {
+        return /databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId);
+      }
+
+      function highlightLogPath() {
+        return /databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId)/adventureLogs/$(logId);
+      }
+
+      function isHighlightManager() {
+        return isOrganizer(groupId) || (
+          isMember(groupId) &&
+          exists(highlightCampaignPath()) &&
+          request.auth.uid in get(highlightCampaignPath()).data.dmIds
+        );
+      }
+
+      function validPublicHighlight(highlightData) {
+        return highlightData.keys().hasOnly([
+            'groupId', 'campaignId', 'adventureLogId', 'campaignName',
+            'sessionNumber', 'title', 'sessionDate', 'excerpt', 'published',
+            'publishedById', 'publishedAt', 'updatedAt'
+          ]) &&
+          highlightData.groupId == groupId &&
+          highlightData.campaignId == campaignId &&
+          highlightData.adventureLogId == logId &&
+          highlightData.campaignName is string &&
+          highlightData.campaignName.size() > 0 &&
+          highlightData.sessionNumber is int &&
+          highlightData.sessionNumber > 0 &&
+          highlightData.title is string &&
+          highlightData.title.size() > 0 &&
+          highlightData.sessionDate is timestamp &&
+          highlightData.excerpt is string &&
+          highlightData.excerpt.size() > 0 &&
+          highlightData.excerpt.size() <= 500 &&
+          highlightData.published is bool &&
+          highlightData.publishedById is string &&
+          highlightData.publishedAt is timestamp &&
+          highlightData.updatedAt is timestamp &&
+          exists(highlightCampaignPath()) &&
+          exists(highlightLogPath());
+      }
+
+      allow get: if (resource != null && resource.data.published == true) || isHighlightManager();
+      allow list: if false;
+      allow create: if isHighlightManager() &&
+        validPublicHighlight(request.resource.data) &&
+        request.resource.data.published == true &&
+        request.resource.data.publishedById == request.auth.uid;
+      allow update: if isHighlightManager() &&
+        validPublicHighlight(request.resource.data) &&
+        request.resource.data.publishedById == request.auth.uid &&
+        request.resource.data.groupId == resource.data.groupId &&
+        request.resource.data.campaignId == resource.data.campaignId &&
+        request.resource.data.adventureLogId == resource.data.adventureLogId &&
+        request.resource.data.publishedAt == resource.data.publishedAt;
+      allow delete: if false;
+    }
+
     // Collection-group membership lookup used to populate the active-table
     // selector. Queries must constrain userId to the signed-in user.
     match /{path=**}/members/{userId} {
