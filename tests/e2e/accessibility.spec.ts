@@ -37,6 +37,7 @@ test('primary authenticated views have no serious accessibility violations', asy
     { path: '/game-nights', heading: 'Game nights' },
     { path: '/games', heading: 'Game library' },
     { path: '/campaigns', heading: 'Campaigns' },
+    { path: '/characters', heading: 'Characters' },
     { path: '/users', heading: 'Users' },
     { path: '/profile', heading: 'Profile' },
     { path: '/leaderboard', heading: 'Leaderboard' }

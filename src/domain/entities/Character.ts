@@ -11,6 +11,7 @@ export interface Character {
   portraitUrl: string | null
   externalSheetUrl: string | null
   publicNotes: string | null
+  allowCopying: boolean
   fieldValues: Record<string, CharacterFieldValue>
   createdById: string
   createdAt: Date

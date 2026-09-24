@@ -107,6 +107,48 @@ service cloud.firestore {
         allow create, update, delete: if isOrganizer(groupId);
       }
 
+      match /characterVault/{characterId} {
+        function validVaultCharacter(characterData) {
+          return characterData.name is string &&
+            characterData.name.size() > 0 &&
+            characterData.ownerId is string &&
+            characterData.system is string &&
+            characterData.system.size() > 0 &&
+            (characterData.variant == null || characterData.variant is string) &&
+            (characterData.pronouns == null || characterData.pronouns is string) &&
+            characterData.status in ['draft', 'ready', 'retired'] &&
+            characterData.visibility in ['private', 'table'] &&
+            characterData.allowCopying is bool &&
+            (characterData.visibility == 'table' || characterData.allowCopying == false) &&
+            (characterData.portraitUrl == null || characterData.portraitUrl is string) &&
+            (characterData.externalSheetUrl == null || characterData.externalSheetUrl is string) &&
+            (characterData.publicNotes == null || characterData.publicNotes is string) &&
+            characterData.fieldDefinitions is list &&
+            characterData.fieldDefinitions.size() <= 50 &&
+            characterData.fieldValues is map &&
+            characterData.fieldValues.size() <= 50 &&
+            (characterData.source == null || characterData.source is map) &&
+            characterData.createdById is string &&
+            characterData.createdAt is timestamp &&
+            characterData.updatedAt is timestamp;
+        }
+
+        allow get: if isMember(groupId) && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'table');
+        allow list: if isMember(groupId) && (resource.data.ownerId == request.auth.uid || resource.data.visibility == 'table');
+        allow create: if isMember(groupId) &&
+          validVaultCharacter(request.resource.data) &&
+          request.resource.data.ownerId == request.auth.uid &&
+          request.resource.data.createdById == request.auth.uid;
+        allow update: if isMember(groupId) &&
+          resource.data.ownerId == request.auth.uid &&
+          validVaultCharacter(request.resource.data) &&
+          request.resource.data.ownerId == resource.data.ownerId &&
+          request.resource.data.createdById == resource.data.createdById &&
+          request.resource.data.source == resource.data.source &&
+          request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if false;
+      }
+
       match /campaigns/{campaignId} {
         function validCampaign(campaignData) {
           return campaignData.name is string &&
@@ -168,6 +210,7 @@ service cloud.firestore {
               (characterData.portraitUrl == null || characterData.portraitUrl is string) &&
               (characterData.externalSheetUrl == null || characterData.externalSheetUrl is string) &&
               (characterData.publicNotes == null || characterData.publicNotes is string) &&
+              characterData.get('allowCopying', false) is bool &&
               characterData.fieldValues is map &&
               characterData.fieldValues.size() <= 50 &&
               characterData.createdById is string &&

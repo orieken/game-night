@@ -7,6 +7,7 @@ import { useCampaignStore } from '@/stores/campaignStore'
 import { useCharacterStore } from '@/stores/characterStore'
 import { useGroupStore } from '@/stores/groupStore'
 import { useToastStore } from '@/stores/toastStore'
+import { useVaultCharacterStore } from '@/stores/vaultCharacterStore'
 import AppButton from '@/components/common/AppButton.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ErrorState from '@/components/common/ErrorState.vue'
@@ -20,6 +21,7 @@ const campaignStore = useCampaignStore()
 const characterStore = useCharacterStore()
 const groupStore = useGroupStore()
 const toastStore = useToastStore()
+const vaultStore = useVaultCharacterStore()
 const confirmingRetirement = ref(false)
 const campaignId = computed(() => typeof route.params.campaignId === 'string' ? route.params.campaignId : null)
 const characterId = computed(() => typeof route.params.characterId === 'string' ? route.params.characterId : null)
@@ -54,6 +56,14 @@ async function retireCharacter() {
   else toastStore.show(characterStore.error ?? 'Unable to retire the character.', 'error')
 }
 
+async function copyToVault() {
+  if (!groupStore.activeGroupId || !authStore.user?.id || !character.value || !campaign.value || isOwner.value || !character.value.allowCopying) return
+  const copied = await vaultStore.copyCampaignCharacter(groupStore.activeGroupId, character.value, campaign.value, authStore.user.id)
+  if (!copied) { toastStore.show(vaultStore.error ?? 'Unable to copy the character.', 'error'); return }
+  toastStore.show('Character copied to your private vault.', 'success')
+  await router.push(`/characters/${copied.id}`)
+}
+
 watch([() => groupStore.activeGroupId, campaignId, characterId], () => void loadCharacter(), { immediate: true })
 </script>
 
@@ -63,7 +73,7 @@ watch([() => groupStore.activeGroupId, campaignId, characterId], () => void load
     <ErrorState v-else-if="campaignStore.error || characterStore.error && !character" :message="campaignStore.error ?? characterStore.error ?? 'Unable to load the character.'" @retry="loadCharacter" />
     <template v-else-if="campaign && character">
       <PageHeader :eyebrow="`${campaign.system} · ${character.status}`" :title="character.name" :description="`Played by ${playerName}${character.pronouns ? ` · ${character.pronouns}` : ''}`">
-        <template #actions><AppButton variant="secondary" @click="router.push(`/campaigns/${campaign.id}`)">Back to campaign</AppButton><AppButton v-if="isOwner" @click="router.push(`/campaigns/${campaign.id}/characters/${character.id}/edit`)">Edit character</AppButton></template>
+        <template #actions><AppButton variant="secondary" @click="router.push(`/campaigns/${campaign.id}`)">Back to campaign</AppButton><AppButton v-if="isOwner" @click="router.push(`/campaigns/${campaign.id}/characters/${character.id}/edit`)">Edit character</AppButton><AppButton v-else-if="character.allowCopying" :loading="vaultStore.loading" @click="copyToVault">Copy to my vault</AppButton></template>
       </PageHeader>
       <ErrorState v-if="characterStore.error" class="mb-6" :message="characterStore.error" :retryable="false" />
       <div class="grid gap-6 lg:grid-cols-[280px_1fr]">

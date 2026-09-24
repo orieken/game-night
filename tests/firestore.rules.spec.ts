@@ -191,6 +191,39 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(memberDatabase, 'groups', 'group-1', 'games', 'catan'), game))
   })
 
+  it('protects private vault characters while allowing explicit table sharing and owned copies', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'player-1', role: 'member' }
+    ])
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const playerDatabase = testEnvironment.authenticatedContext('player-1').firestore()
+    const character = {
+      name: 'Trial Witch', ownerId: 'owner-1', system: 'Symbaroum', variant: null, pronouns: null,
+      status: 'ready', visibility: 'private', allowCopying: false, portraitUrl: null, externalSheetUrl: null,
+      publicNotes: 'Ready for a one-shot.', fieldDefinitions: [], fieldValues: {}, source: null,
+      createdById: 'owner-1', createdAt: new Date(), updatedAt: new Date()
+    }
+    const privateRef = doc(ownerDatabase, 'groups', 'group-1', 'characterVault', 'private-1')
+    const sharedRef = doc(ownerDatabase, 'groups', 'group-1', 'characterVault', 'shared-1')
+    await assertSucceeds(setDoc(privateRef, character))
+    await assertSucceeds(setDoc(sharedRef, { ...character, visibility: 'table', allowCopying: true }))
+    await assertFails(getDoc(doc(playerDatabase, 'groups', 'group-1', 'characterVault', 'private-1')))
+    await assertSucceeds(getDoc(doc(playerDatabase, 'groups', 'group-1', 'characterVault', 'shared-1')))
+    const visibleQuery = query(collection(playerDatabase, 'groups', 'group-1', 'characterVault'), where('visibility', '==', 'table'))
+    expect((await assertSucceeds(getDocs(visibleQuery))).size).toBe(1)
+    const ownedQuery = query(collection(ownerDatabase, 'groups', 'group-1', 'characterVault'), where('ownerId', '==', 'owner-1'))
+    expect((await assertSucceeds(getDocs(ownedQuery))).size).toBe(2)
+    await assertFails(updateDoc(doc(playerDatabase, 'groups', 'group-1', 'characterVault', 'shared-1'), { name: 'Stolen', updatedAt: new Date() }))
+    await assertSucceeds(setDoc(doc(playerDatabase, 'groups', 'group-1', 'characterVault', 'copy-1'), {
+      ...character, name: 'Trial Witch copy', ownerId: 'player-1', status: 'draft', createdById: 'player-1',
+      source: { type: 'vault', characterId: 'shared-1', characterName: 'Trial Witch', ownerId: 'owner-1', campaignId: null }
+    }))
+    await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'characterVault', 'bad-owner'), { ...character, createdById: 'player-1' }))
+    await assertFails(updateDoc(privateRef, { ownerId: 'player-1', updatedAt: new Date() }))
+    await assertFails(deleteDoc(sharedRef))
+  })
+
   it('lets organizers create campaigns and assigned DMs maintain them', async () => {
     await seedGroup('group-1', 'owner-1', [
       { id: 'owner-1', role: 'owner' },

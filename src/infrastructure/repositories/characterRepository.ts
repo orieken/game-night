@@ -28,6 +28,7 @@ export const characterRepository: ICharacterRepository = {
       portraitUrl: character.portraitUrl,
       externalSheetUrl: character.externalSheetUrl,
       publicNotes: character.publicNotes,
+      allowCopying: character.allowCopying,
       fieldValues: character.fieldValues,
       createdById: character.createdById,
       createdAt: serverTimestamp(),
@@ -45,6 +46,7 @@ export const characterRepository: ICharacterRepository = {
       portraitUrl: character.portraitUrl,
       externalSheetUrl: character.externalSheetUrl,
       publicNotes: character.publicNotes,
+      allowCopying: character.allowCopying,
       fieldValues: character.fieldValues
     }).filter(([, value]) => value !== undefined))
     const characterRef = doc(charactersCollection(groupId, campaignId), id)

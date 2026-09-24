@@ -67,7 +67,7 @@ watch(() => groupStore.activeGroupId, () => void loadUsers(), { immediate: true 
             <span v-if="member.userId === authStore.user?.id" class="text-xs font-semibold uppercase tracking-wider text-[#bda7ff]">You</span>
           </div>
           <p class="mt-1 text-xs text-slate-400">Joined {{ format(member.joinedAt, 'MMM d, yyyy') }}</p>
-          <RouterLink v-if="member.userId === authStore.user?.id" to="/profile" class="mt-2 inline-block text-xs font-semibold text-[#bda7ff] hover:text-white">View profile</RouterLink>
+          <RouterLink :to="member.userId === authStore.user?.id ? '/profile' : `/users/${member.userId}`" class="mt-2 inline-block text-xs font-semibold text-[#bda7ff] hover:text-white">View profile</RouterLink>
         </div>
         <span class="rounded-full bg-white/5 px-3 py-1.5 text-xs font-semibold capitalize text-slate-300">{{ member.role }}</span>
       </li>

@@ -57,6 +57,9 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
 - [x] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, corruption, abilities, or differently named stats without implementing game-rule calculations.
 - [x] Add character create, edit, retire, detail, and campaign-roster views.
+- [x] Add a campaign-independent character vault for drafts and reusable trial characters.
+- [x] Add separate table visibility and copy permissions, with private player-owned copies and source attribution.
+- [x] Show permitted vault and campaign characters on player profiles and allow vault characters to be added to campaigns.
 - [x] Add campaign session logs linked to their scheduled events.
 - [x] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
 - [x] Add adventure-log create, edit, list, and detail views for campaign participants.

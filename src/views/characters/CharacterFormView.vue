@@ -41,6 +41,7 @@ const form = reactive({
   portraitUrl: '',
   externalSheetUrl: '',
   publicNotes: '',
+  allowCopying: false,
   fieldValues: {} as Record<string, CharacterFieldValue>
 })
 
@@ -75,6 +76,7 @@ function resetForm() {
   form.portraitUrl = ''
   form.externalSheetUrl = ''
   form.publicNotes = ''
+  form.allowCopying = false
   form.fieldValues = Object.fromEntries((campaign.value?.characterFieldDefinitions ?? []).map((field) => [field.id, defaultValue(field)]))
 }
 
@@ -85,6 +87,7 @@ function populateForm(character: Character) {
   form.portraitUrl = character.portraitUrl ?? ''
   form.externalSheetUrl = character.externalSheetUrl ?? ''
   form.publicNotes = character.publicNotes ?? ''
+  form.allowCopying = character.allowCopying
   form.fieldValues = Object.fromEntries((campaign.value?.characterFieldDefinitions ?? []).map((field) => [
     field.id,
     character.fieldValues[field.id] ?? defaultValue(field)
@@ -130,6 +133,7 @@ async function submit() {
     portraitUrl: form.portraitUrl.trim() || null,
     externalSheetUrl: form.externalSheetUrl.trim() || null,
     publicNotes: form.publicNotes.trim() || null,
+    allowCopying: form.allowCopying,
     fieldValues: normalizedFieldValues()
   }
   const saved = isEditing.value && characterId.value
@@ -162,6 +166,7 @@ watch([() => groupStore.activeGroupId, campaignId, characterId], () => void init
           <div v-if="isEditing"><label for="character-status" class="app-label">Status</label><select id="character-status" v-model="form.status" class="app-field"><option value="active">Active</option><option value="inactive">Inactive</option><option value="retired">Retired</option><option value="deceased">Deceased</option></select></div>
           <div class="grid gap-4 sm:grid-cols-2"><AppInput id="portrait-url" v-model="form.portraitUrl" type="url" label="Portrait URL" placeholder="Optional" /><AppInput id="sheet-url" v-model="form.externalSheetUrl" type="url" label="External sheet URL" placeholder="Optional" /></div>
           <div><label for="public-notes" class="app-label">Campaign-visible notes</label><textarea id="public-notes" v-model="form.publicNotes" rows="4" class="app-field" placeholder="Background, personality, or details the party knows."></textarea></div>
+          <label class="flex min-h-11 items-start gap-3 rounded-xl border border-white/10 p-4 text-sm text-slate-300"><input v-model="form.allowCopying" type="checkbox" class="mt-0.5 h-5 w-5 rounded border-white/20 bg-[#10131a] text-[#8b5cf6]"><span><strong class="block text-white">Allow campaign members to copy this character</strong><span class="mt-1 block text-xs text-slate-400">Copies exclude campaign history and become privately owned vault drafts.</span></span></label>
         </section>
 
         <section v-if="campaign.characterFieldDefinitions.length" class="border-t border-white/10 pt-7" aria-labelledby="campaign-fields-heading">

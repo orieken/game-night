@@ -123,6 +123,7 @@ export default async function globalSetup() {
     portraitUrl: null,
     externalSheetUrl: null,
     publicNotes: 'A seasoned warrior exploring Davokar.',
+    allowCopying: true,
     fieldValues: {
       archetype: 'Warrior',
       corruption: 1,

@@ -19,6 +19,9 @@ import CampaignFormView from '@/views/campaigns/CampaignFormView.vue'
 import CampaignDetailView from '@/views/campaigns/CampaignDetailView.vue'
 import CharacterFormView from '@/views/characters/CharacterFormView.vue'
 import CharacterDetailView from '@/views/characters/CharacterDetailView.vue'
+import VaultCharacterListView from '@/views/characters/VaultCharacterListView.vue'
+import VaultCharacterFormView from '@/views/characters/VaultCharacterFormView.vue'
+import VaultCharacterDetailView from '@/views/characters/VaultCharacterDetailView.vue'
 import AdventureLogFormView from '@/views/adventure-logs/AdventureLogFormView.vue'
 import AdventureLogDetailView from '@/views/adventure-logs/AdventureLogDetailView.vue'
 
@@ -128,6 +131,30 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Character sheet' }
     },
     {
+      path: '/characters',
+      name: 'character-vault',
+      component: VaultCharacterListView,
+      meta: { requiresAuth: true, title: 'Characters' }
+    },
+    {
+      path: '/characters/new',
+      name: 'vault-character-create',
+      component: VaultCharacterFormView,
+      meta: { requiresAuth: true, title: 'Create character' }
+    },
+    {
+      path: '/characters/:id/edit',
+      name: 'vault-character-edit',
+      component: VaultCharacterFormView,
+      meta: { requiresAuth: true, title: 'Edit character' }
+    },
+    {
+      path: '/characters/:id',
+      name: 'vault-character-detail',
+      component: VaultCharacterDetailView,
+      meta: { requiresAuth: true, title: 'Character' }
+    },
+    {
       path: '/campaigns/:campaignId/adventure-logs/new',
       name: 'adventure-log-create',
       component: AdventureLogFormView,
@@ -162,6 +189,12 @@ const router = createRouter({
       name: 'profile',
       component: UserProfileView,
       meta: { requiresAuth: true, title: 'Profile' }
+    },
+    {
+      path: '/users/:userId',
+      name: 'user-profile',
+      component: UserProfileView,
+      meta: { requiresAuth: true, title: 'Player profile' }
     },
     {
       path: '/leaderboard',

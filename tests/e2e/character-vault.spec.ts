@@ -1,0 +1,53 @@
+import { expect, test } from '@playwright/test'
+import { loginAsGuest, loginAsHost } from './helpers'
+import { E2E_CAMPAIGN, E2E_GUEST, E2E_USER } from './seedData'
+
+test('shares, copies, profiles, and adds a vault character to a campaign', async ({ page, browser }) => {
+  await loginAsHost(page)
+  await page.goto('/characters/new')
+  await page.getByLabel('Character name').fill('Trial Ranger')
+  await page.getByLabel('Game system').fill('Symbaroum')
+  await page.getByLabel('Status').selectOption('ready')
+  await page.getByLabel('Visibility').selectOption('table')
+  await page.getByLabel('Allow other players to copy this character').check()
+  await page.getByLabel('Table-visible notes').fill('A ready-to-play ranger for a new guest.')
+  await page.getByRole('button', { name: 'Add field' }).click()
+  await page.getByLabel('Field label').fill('Archetype')
+  await page.getByLabel('Field type').selectOption('select')
+  await page.getByLabel('Choices').fill('Warrior, Mystic')
+  await page.getByLabel('Value').selectOption('Warrior')
+  await page.getByRole('button', { name: 'Create character' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Trial Ranger', exact: true })).toBeVisible()
+  await expect(page.getByText('Copying')).toBeVisible()
+  await expect(page.getByText('Allowed')).toBeVisible()
+  await page.goto('/profile')
+  await expect(page.getByRole('link', { name: /Trial Ranger/ })).toBeVisible()
+
+  const guestContext = await browser.newContext()
+  const guestPage = await guestContext.newPage()
+  await loginAsGuest(guestPage)
+  await guestPage.goto('/users')
+  const hostCard = guestPage.getByRole('listitem').filter({ hasText: E2E_USER.displayName })
+  await hostCard.getByRole('link', { name: 'View profile' }).click()
+  await expect(guestPage.locator('header').getByRole('heading', { name: E2E_USER.displayName, exact: true })).toBeVisible()
+  await guestPage.getByRole('link', { name: /Trial Ranger/ }).click()
+  await guestPage.getByRole('button', { name: 'Copy to my vault' }).click()
+
+  await expect(guestPage.getByRole('heading', { name: 'Trial Ranger copy', exact: true })).toBeVisible()
+  await expect(guestPage.getByText(`Based on Trial Ranger by ${E2E_USER.displayName}.`)).toBeVisible()
+  await expect(guestPage.getByText('private', { exact: true })).toBeVisible()
+  await guestPage.getByLabel('Campaign').selectOption(E2E_CAMPAIGN.id)
+  await guestPage.getByRole('button', { name: 'Add to campaign' }).click()
+  await expect(guestPage).toHaveURL(new RegExp(`/campaigns/${E2E_CAMPAIGN.id}/characters/[^/]+/edit$`))
+  await expect(guestPage.getByLabel(/Archetype/)).toHaveValue('Warrior')
+  await guestPage.getByRole('button', { name: 'Save character' }).click()
+  await expect(guestPage.getByRole('heading', { name: 'Trial Ranger copy', exact: true })).toBeVisible()
+  await guestContext.close()
+
+  await page.goto('/users')
+  const guestCard = page.getByRole('listitem').filter({ hasText: E2E_GUEST.displayName })
+  await guestCard.getByRole('link', { name: 'View profile' }).click()
+  await expect(page.getByRole('link', { name: /Trial Ranger copy/ })).toHaveCount(1)
+  await expect(page.getByText('Your character')).toHaveCount(0)
+})
