@@ -20,8 +20,8 @@ Make it easy for a private group to add accurate board-game information to its s
 ## Phase 1 — BoardGameGeek catalog import
 
 - [x] Draft the non-commercial application description for BoardGameGeek API registration.
-- [ ] Register the application with BoardGameGeek and obtain an application token.
-- [ ] Add the BGG token to local and Netlify server-side environment configuration; never expose it through a `VITE_` variable.
+- [x] Register the application with BoardGameGeek and obtain an application token.
+- [x] Add the BGG token to local and Netlify server-side environment configuration; never expose it through a `VITE_` variable.
 - [x] Add a Netlify Function that authenticates with BGG and converts XML responses into the app's JSON format.
 - [x] Add typed catalog entities and an interface so the UI does not depend directly on BGG response shapes.
 - [x] Implement debounced catalog search with a minimum query length and useful timeout/error handling.
@@ -32,7 +32,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Preserve manual game creation and editing as a fallback.
 - [x] Prevent duplicate imports of the same BGG game into one group, while allowing an intentional second physical copy later.
 - [x] Add required “Powered by BGG” attribution and a link to the source game page.
-- [ ] Add unit tests for XML parsing, mapping, duplicate detection, and error handling.
+- [x] Add unit tests for XML parsing, mapping, duplicate detection, and error handling.
 - [x] Add emulator-backed E2E tests for search, import, duplicate prevention, and manual fallback.
 - [x] Document local token setup, Netlify token setup, attribution, and non-commercial-use constraints.
 

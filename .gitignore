@@ -20,6 +20,7 @@ firestore-debug.log
 
 # Editor directories and files
 .vscode/
+.history/
 .idea
 .DS_Store
 *.suo

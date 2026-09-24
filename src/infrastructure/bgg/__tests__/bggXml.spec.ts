@@ -56,4 +56,22 @@ describe('BoardGameGeek XML parsing', () => {
     expect(game?.minPlayers).toBeNull()
     expect(game?.complexityWeight).toBeNull()
   })
+
+  it('skips entries without a valid BGG ID and falls back safely when names are missing', () => {
+    const xml = `
+      <items>
+        <item type="boardgame"><name type="primary" value="Missing ID"/></item>
+        <item type="boardgame" id="not-a-number"><name type="primary" value="Bad ID"/></item>
+        <item type="boardgame" id="42"><yearpublished value="unknown"/></item>
+      </items>`
+
+    expect(parseBggSearchXml(xml)).toEqual([
+      { bggId: 42, name: 'Unknown game', yearPublished: null }
+    ])
+  })
+
+  it('returns an empty list for an empty response', () => {
+    expect(parseBggSearchXml('<items total="0"></items>')).toEqual([])
+    expect(parseBggThingsXml('<items></items>')).toEqual([])
+  })
 })

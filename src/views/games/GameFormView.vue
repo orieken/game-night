@@ -13,6 +13,7 @@ import LoadingState from '@/components/common/LoadingState.vue'
 import ErrorState from '@/components/common/ErrorState.vue'
 import type { Game } from '@/domain/entities/Game'
 import type { GameCatalogReference, GameCatalogSummary } from '@/domain/entities/GameCatalog'
+import { hasBggDuplicate, mapCatalogDetailsToGameDraft } from '@/domain/gameCatalogImport'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,22 +91,8 @@ function resetForm() {
   catalogStore.clear()
 }
 
-function complexityFromWeight(weight: number | null): Game['complexity'] {
-  if (weight === null) return null
-  if (weight < 2) return 'light'
-  if (weight < 3.5) return 'medium'
-  return 'heavy'
-}
-
-function descriptionForLocalForm(description: string | null): string {
-  return description
-    ?.replace(/<br\s*\/?\s*>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .trim() ?? ''
-}
-
 async function selectCatalogGame(result: GameCatalogSummary) {
-  if (gameStore.games.some((game) => game.bggId === result.bggId)) {
+  if (hasBggDuplicate(gameStore.games, result.bggId)) {
     validationError.value = `${result.name} is already in this table's library.`
     return
   }
@@ -116,15 +103,16 @@ async function selectCatalogGame(result: GameCatalogSummary) {
   selectingBggId.value = null
   if (!details) return
 
-  selectedCatalog.value = { ...details, source: 'boardgamegeek', importedAt: new Date() }
-  form.name = details.name
-  form.description = descriptionForLocalForm(details.description)
-  form.minPlayers = details.minPlayers ?? 1
-  form.maxPlayers = details.maxPlayers ?? details.minPlayers ?? 1
-  form.avgDuration = details.playingTimeMinutes
-  form.complexity = complexityFromWeight(details.complexityWeight) ?? ''
-  form.categories = details.categories.join(', ')
-  form.imageUrl = details.imageUrl ?? details.thumbnailUrl ?? ''
+  const draft = mapCatalogDetailsToGameDraft(details)
+  selectedCatalog.value = draft.catalogData
+  form.name = draft.name
+  form.description = draft.description
+  form.minPlayers = draft.minPlayers
+  form.maxPlayers = draft.maxPlayers
+  form.avgDuration = draft.avgDuration
+  form.complexity = draft.complexity ?? ''
+  form.categories = draft.categories
+  form.imageUrl = draft.imageUrl
   catalogStore.clear()
 }
 
@@ -141,7 +129,7 @@ async function submit() {
   const maxPlayers = Number(form.maxPlayers)
 
   if (!groupId || !canManage.value) return
-  if (!isEditing.value && selectedCatalog.value && gameStore.games.some((game) => game.bggId === selectedCatalog.value?.bggId)) {
+  if (!isEditing.value && selectedCatalog.value && hasBggDuplicate(gameStore.games, selectedCatalog.value.bggId)) {
     validationError.value = 'This BoardGameGeek title is already in your table library.'
     return
   }
