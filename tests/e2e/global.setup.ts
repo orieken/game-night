@@ -104,7 +104,12 @@ export default async function globalSetup() {
     dmIds: [userId],
     memberIds: [userId, guestId],
     externalLinks: [],
-    characterFieldDefinitions: [],
+    characterFieldDefinitions: [
+      { id: 'archetype', label: 'Archetype', type: 'select', required: true, options: ['Witch', 'Mystic', 'Warrior'] },
+      { id: 'corruption', label: 'Corruption', type: 'number', required: false, options: [] },
+      { id: 'shadow-visible', label: 'Shadow visible', type: 'boolean', required: false, options: [] },
+      { id: 'abilities', label: 'Abilities', type: 'long_text', required: false, options: [] }
+    ],
     createdById: userId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()

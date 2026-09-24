@@ -56,7 +56,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Allow players to manage their own character details; allow DMs to manage campaign membership and archival status.
 - [x] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
 - [x] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, corruption, abilities, or differently named stats without implementing game-rule calculations.
-- [ ] Add character create, edit, retire, and campaign-roster views.
+- [x] Add character create, edit, retire, detail, and campaign-roster views.
 - [ ] Add campaign session logs linked to their scheduled events.
 - [ ] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
 - [ ] Keep private DM notes in separately protected documents that ordinary campaign members cannot read.

@@ -12,6 +12,8 @@ import LoadingState from '@/components/common/LoadingState.vue'
 import PageHeader from '@/components/common/PageHeader.vue'
 import { useGameNightStore } from '@/stores/gameNightStore'
 import { format } from 'date-fns'
+import { useCharacterStore } from '@/stores/characterStore'
+import CharacterCard from '@/components/campaign/CharacterCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,25 +22,36 @@ const campaignStore = useCampaignStore()
 const groupStore = useGroupStore()
 const toastStore = useToastStore()
 const gameNightStore = useGameNightStore()
+const characterStore = useCharacterStore()
 const confirmingArchive = ref(false)
 const campaign = computed(() => campaignStore.currentCampaign)
 const memberRole = computed(() => groupStore.members.find((member) => member.userId === authStore.user?.id)?.role)
-const canManage = computed(() => memberRole.value === 'owner' || memberRole.value === 'organizer' || Boolean(campaign.value?.dmIds.includes(authStore.user?.id ?? '')))
+const isOrganizer = computed(() => memberRole.value === 'owner' || memberRole.value === 'organizer')
+const isParticipant = computed(() => Boolean(campaign.value && authStore.user && (
+  campaign.value.memberIds.includes(authStore.user.id) || campaign.value.dmIds.includes(authStore.user.id)
+)))
+const canManage = computed(() => isOrganizer.value || Boolean(campaign.value?.dmIds.includes(authStore.user?.id ?? '')))
+const canViewRoster = computed(() => isOrganizer.value || isParticipant.value)
+const canCreateCharacter = computed(() => isParticipant.value && campaign.value?.status !== 'archived')
 const dms = computed(() => groupStore.members.filter((member) => campaign.value?.dmIds.includes(member.userId)))
 const players = computed(() => groupStore.members.filter((member) => campaign.value?.memberIds.includes(member.userId)))
 const linkedEvents = computed(() => gameNightStore.gameNights
   .filter((event) => event.campaignId === campaign.value?.id)
   .sort((left, right) => left.eventDate.getTime() - right.eventDate.getTime()))
 
-function loadCampaign() {
+async function loadCampaign() {
   const groupId = groupStore.activeGroupId
   const id = route.params.id
   confirmingArchive.value = false
-  if (groupId && typeof id === 'string') void Promise.all([
-    campaignStore.fetchCampaignById(groupId, id),
-    groupStore.fetchMembers(groupId),
-    gameNightStore.fetchGameNights(groupId)
-  ])
+  characterStore.reset()
+  if (groupId && typeof id === 'string') {
+    await Promise.all([
+      campaignStore.fetchCampaignById(groupId, id),
+      groupStore.fetchMembers(groupId),
+      gameNightStore.fetchGameNights(groupId)
+    ])
+    if (canViewRoster.value) await characterStore.fetchCharacters(groupId, id)
+  }
 }
 
 async function archiveCampaign() {
@@ -66,6 +79,19 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadCampaign, { i
           <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <h2 class="text-lg font-bold text-white">About this campaign</h2>
             <p class="mt-3 whitespace-pre-wrap leading-7 text-slate-300">{{ campaign.description || 'No campaign description has been added yet.' }}</p>
+          </section>
+          <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
+            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div><h2 class="text-lg font-bold text-white">Character roster</h2><p class="mt-1 text-sm text-slate-400">Player-managed sheets for this campaign.</p></div>
+              <AppButton v-if="canCreateCharacter" @click="router.push(`/campaigns/${campaign.id}/characters/new`)">Create character</AppButton>
+            </div>
+            <LoadingState v-if="characterStore.loading" class="mt-5" label="Loading character roster…" />
+            <ErrorState v-else-if="characterStore.error" class="mt-5" :message="characterStore.error" :retryable="false" />
+            <p v-else-if="!canViewRoster" class="mt-5 rounded-xl bg-white/5 p-4 text-sm text-slate-400">The character roster is visible to campaign participants.</p>
+            <p v-else-if="!characterStore.characters.length" class="mt-5 rounded-xl bg-white/5 p-4 text-sm text-slate-400">No characters have joined this campaign yet.</p>
+            <div v-else class="mt-5 grid gap-3 sm:grid-cols-2">
+              <CharacterCard v-for="item in characterStore.characters" :key="item.id" :character="item" :campaign-id="campaign.id" :player-name="groupStore.members.find((member) => member.userId === item.playerId)?.displayName ?? 'Campaign player'" />
+            </div>
           </section>
           <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <h2 class="text-lg font-bold text-white">Character setup</h2>

@@ -17,6 +17,8 @@ import UserProfileView from '@/views/users/UserProfileView.vue'
 import CampaignListView from '@/views/campaigns/CampaignListView.vue'
 import CampaignFormView from '@/views/campaigns/CampaignFormView.vue'
 import CampaignDetailView from '@/views/campaigns/CampaignDetailView.vue'
+import CharacterFormView from '@/views/characters/CharacterFormView.vue'
+import CharacterDetailView from '@/views/characters/CharacterDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -104,6 +106,24 @@ const router = createRouter({
       name: 'campaign-detail',
       component: CampaignDetailView,
       meta: { requiresAuth: true, title: 'Campaign details' }
+    },
+    {
+      path: '/campaigns/:campaignId/characters/new',
+      name: 'character-create',
+      component: CharacterFormView,
+      meta: { requiresAuth: true, title: 'Create character' }
+    },
+    {
+      path: '/campaigns/:campaignId/characters/:characterId/edit',
+      name: 'character-edit',
+      component: CharacterFormView,
+      meta: { requiresAuth: true, title: 'Edit character' }
+    },
+    {
+      path: '/campaigns/:campaignId/characters/:characterId',
+      name: 'character-detail',
+      component: CharacterDetailView,
+      meta: { requiresAuth: true, title: 'Character sheet' }
     },
     {
       path: '/invite/:code',
