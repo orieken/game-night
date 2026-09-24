@@ -72,10 +72,10 @@ Make it easy for a private group to add accurate board-game information to its s
 
 ## Phase 4 — Optional rules reference
 
-- [ ] Validate the content license and attribution requirements for each intended SRD source.
-- [ ] Choose between the 5e SRD API and Open5e based on the editions and systems the group actually uses.
-- [ ] Add opt-in spell, monster, equipment, or rules lookup without copying unsupported commercial content.
-- [ ] Keep campaign and character features functional if the reference API is unavailable.
+- [x] Validate the content license and attribution requirements for each intended SRD source. See [RPG rules API research](rpg-rules-api-research.md).
+- [x] Choose Open5e V2 with an SRD-only source allowlist based on the editions and systems the group actually uses.
+- [x] Add opt-in spell, creature, equipment, and rules lookup without copying unsupported commercial content.
+- [x] Keep campaign and character features functional if the reference API is unavailable.
 
 ## BoardGameGeek API registration description
 

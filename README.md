@@ -1,265 +1,119 @@
-# Game Night Tracker - Web App Prototype Brief
+# Game Night
+
+A private, non-commercial app for friends and family to organize board-game nights and tabletop RPG campaigns.
 
 **Live app:** [rieken-game-night.netlify.app](https://rieken-game-night.netlify.app/)
 
-## Product Vision
-A social gaming platform that transforms casual game nights into engaging competitions with intelligent recommendations, gamification, and community features.
+## What the app supports
 
----
+- Email/password accounts, player profiles, and private table membership
+- Board-game library management with BoardGameGeek search and manual entry
+- Board-game, tabletop RPG, and mixed game-night events
+- Shareable invitations, RSVPs, capacity limits, and attendance
+- Completed play sessions, results, history, and a board-game leaderboard
+- System-flexible campaigns for D&D 5e, 5e-derived settings, original Symbaroum, and Ruins of Symbaroum
+- Player-managed campaign characters and a reusable character vault
+- Adventure logs, separately protected DM notes, campaign attendance statistics, and optional public story highlights
+- Optional 2014/2024 SRD lookup for spells, creatures, equipment, and rules
 
-## Core Features
+The detailed catalog and RPG roadmap lives in [docs/game-catalog-rpg-roadmap.md](docs/game-catalog-rpg-roadmap.md).
 
-### User Management
-- User registration and authentication
-- Player profiles with stats and achievements
-- Social connections between players
+## Technology
 
-### Event Management
-- Create game night events with date/time/location
-- Pre-select games from venue inventory
-- Add games dynamically during events
-- Track attendees and RSVPs
+- Vue 3, TypeScript, Vite, Pinia, Vue Router, and Tailwind CSS
+- Firebase Authentication and Cloud Firestore
+- Firestore Security Rules and the Firebase Emulator Suite
+- Netlify hosting and Netlify Functions
+- Vitest for unit and rules tests
+- Playwright for browser tests
 
-### Game Session Tracking
-- Record games played during each event
-- Track winners and participants per game
-- Session duration and completion tracking
-- Post-game voting and ratings
+## Local setup
 
-### Gamification & Leaderboards
-- **Points System**: Wins, participation, streaks, variety bonuses
-- **Achievement Badges**: First win, attendance milestones, game variety, comeback victories
-- **Leaderboards**: Overall, per-game, monthly champions, most social player
-- **Challenges**: Head-to-head rivalries, team tournaments, themed nights
+Requirements:
 
-### AI/ML Features
+- Node.js 20 or newer
+- Java 21 or newer for the Firestore emulator
 
-#### Game Recommendation Engine
-- Analyze past game selections and ratings
-- Consider player preferences and attendance patterns
-- Suggest complementary games based on event context (number of players, duration, difficulty mix)
-- Recommend new games to add to venue inventory based on trends
+Install dependencies and create local configuration:
 
-#### Additional AI Opportunities
-- **Match Balancing**: Suggest player pairings/teams for competitive balance
-- **Optimal Game Sequencing**: Recommend game order based on energy levels and duration
-- **Sentiment Analysis**: Analyze vote patterns to predict game popularity
-- **Predictive Attendance**: Forecast turnout based on historical patterns
-- **Smart Scheduling**: Suggest optimal game night times based on availability
-
----
-
-## Technical Stack
-
-### Frontend
-- **Framework**: Vue 3 (Composition API)
-- **State Management**: Pinia
-- **UI Components**: Consider Vuetify, PrimeVue, or custom with TailwindCSS
-- **Testing**: Vitest (unit/integration), Playwright (E2E)
-
-### Backend Options
-- **Option 1**: Serverless functions (Netlify Functions) + Supabase
-- **Option 2**: Firebase (Auth + Firestore + Functions)
-- **Option 3**: PocketBase (self-hosted lightweight backend)
-- **Recommendation**: Supabase for robust features, real-time capabilities, and edge functions for ML
-
-### Data Storage
-- **User Data**: Supabase PostgreSQL
-- **Real-time Updates**: Supabase real-time subscriptions
-- **File Storage**: Avatar images, game photos (Supabase Storage)
-- **ML Models**: Edge functions or integration with external API
-
-### Deployment
-- **Hosting**: Netlify
-- **Production URL**: [https://rieken-game-night.netlify.app/](https://rieken-game-night.netlify.app/)
-- **Environment variables**: Firebase browser configuration uses the `VITE_FIREBASE_*` names from `.env.example`. Configure these in Netlify so Vite exposes them to the client build.
-- **BoardGameGeek catalog**: Set `BGG_API_TOKEN` as a server-side Netlify environment variable. It must not use the `VITE_` prefix. Run the app through `npx netlify dev` when testing live BGG search locally so the `/api/bgg/*` functions are available.
-- **CI/CD**: GitHub Actions with automated testing
-- **Environment Management**: Staging and production branches
-
----
-
-## Architecture Principles
-
-### Clean Architecture Layers
-```
-┌─────────────────────────────────────┐
-│  Presentation (Vue Components)      │
-├─────────────────────────────────────┤
-│  Application (Pinia Stores, Services)│
-├─────────────────────────────────────┤
-│  Domain (Entities, Use Cases)       │
-├─────────────────────────────────────┤
-│  Infrastructure (API, Database)     │
-└─────────────────────────────────────┘
+```sh
+npm install
+cp .env.example .env
 ```
 
-### Project Structure
-```
-/src
-  /components      # Vue components
-  /composables     # Vue composition functions
-  /stores          # Pinia stores
-  /domain          # Business logic, entities
-  /services        # Application services
-  /infrastructure  # API clients, repositories
-  /utils           # Shared utilities
-  /types           # TypeScript definitions
+Fill in the Firebase web configuration values in `.env`. Firebase web configuration is used by the browser and access is enforced by Authentication and Firestore Security Rules.
 
-/tests
-  /unit           # Vitest unit tests
-  /integration    # Vitest integration tests
-  /e2e            # Playwright E2E tests
+For live BoardGameGeek search, also set:
 
-/docs
-  /agents         # AI agent coding rules
-  /architecture   # ADRs and design docs
-  /api            # API documentation
+```dotenv
+BGG_API_TOKEN=your-server-only-token
 ```
 
----
+Never prefix the BGG token with `VITE_`; only server-side Netlify Functions should receive it. `.env` and editor history files are ignored by Git.
 
-## Four Mockup Concepts
+Run the frontend alone:
 
-### Mockup 1: "Board Game Café Aesthetic"
-**Theme**: Warm, inviting, tactile
-**Color Palette**: Warm browns, cream, forest green, gold accents
-**Typography**: Serif headings, clean sans-serif body
-**Key Elements**:
-- Card-based layout with subtle shadows (physical game box feel)
-- Wooden texture backgrounds
-- Illustrated game pieces as icons (meeples, dice, cards)
-- Physical trophy/medal imagery for leaderboard
-- Retro-inspired achievement badges
-- Polaroid-style photos for event memories
+```sh
+npm run dev
+```
 
-**UX Focus**: Nostalgia, community, cozy gathering
+Run through Netlify Dev when testing `/api/bgg/*` locally:
 
----
+```sh
+npx netlify dev
+```
 
-### Mockup 2: "Modern Minimalist Dashboard"
-**Theme**: Clean, data-driven, professional
-**Color Palette**: White, light gray, accent blue/purple
-**Typography**: Modern sans-serif (Inter, Poppins)
-**Key Elements**:
-- Sleek glassmorphism cards with blur effects
-- Data visualization charts (wins over time, game popularity)
-- Minimalist icons and illustrations
-- Clean table layouts for leaderboards
-- Subtle animations on hover/interaction
-- Professional sports scoreboard aesthetic
+## Testing
 
-**UX Focus**: Clarity, stats, performance tracking
+```sh
+npm run typecheck
+npm run lint
+npm run test:unit -- --run
+npm run test:rules
+npm run test:e2e
+npm run test:e2e:headed
+npm run build
+```
 
----
+The rules and browser suites use Firebase emulators and the demo project ID; they do not write to production Firebase data. The Playwright global setup creates deterministic local accounts and fixtures.
 
-### Mockup 3: "Playful Gamification Focus"
-**Theme**: Energetic, achievement-driven, fun
-**Color Palette**: Bright primary colors, gradients
-**Typography**: Bold, rounded fonts
-**Key Elements**:
-- RPG-style character avatars with levels
-- Animated progress bars and XP meters
-- Quest board for challenges
-- Pixel art or illustrated badge designs
-- Confetti animations for achievements
-- Power-up style game recommendations
-- Battle/duel interfaces for head-to-head
+## Deployment
 
-**UX Focus**: Progression, rewards, competition
+Netlify builds the site with `npm run build` and publishes `dist`.
 
----
+Configure these environment variables in Netlify:
 
-### Mockup 4: "Social Feed Experience"
-**Theme**: Connected, shareable, mobile-first
-**Color Palette**: Instagram-inspired with brand colors
-**Typography**: Clean, readable mobile fonts
-**Key Elements**:
-- Vertical feed of game night "stories"
-- Social reactions (likes, emojis) on games/results
-- Story-style highlights with circular avatars
-- Comment threads on events
-- Share buttons for social media
-- Activity notifications feed
-- Swipe gestures for mobile interactions
+- `VITE_FIREBASE_API_KEY`
+- `VITE_FIREBASE_AUTH_DOMAIN`
+- `VITE_FIREBASE_PROJECT_ID`
+- `VITE_FIREBASE_STORAGE_BUCKET`
+- `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- `VITE_FIREBASE_APP_ID`
+- `BGG_API_TOKEN` — server-only; no `VITE_` prefix
 
-**UX Focus**: Social engagement, mobile experience, shareability
+Environment-variable changes require a new Netlify deploy before Functions receive the new values.
 
----
+Deploy Firestore rules and indexes separately:
 
-## Implementation Roadmap
+```sh
+npx firebase deploy --only firestore:rules,firestore:indexes --project rieken-game-night
+```
 
-### Phase 1: MVP (Weeks 1-4)
-- [ ] Project setup (Vue 3, Vite, TypeScript, Vitest, Playwright)
-- [ ] Authentication (Supabase Auth)
-- [ ] Basic user profiles
-- [ ] Create game night events
-- [ ] Add games to game library
-- [ ] Select games for game night
-- [ ] Basic session tracking (winners only)
-- [ ] Simple leaderboard (win count)
+## Data and security model
 
-### Phase 2: Gamification (Weeks 5-6)
-- [ ] Points system implementation
-- [ ] Achievement system
-- [ ] Enhanced leaderboards (multiple categories)
-- [ ] Badges and progression
-- [ ] Challenges framework
+- A group/table is the main authorization boundary.
+- Owners and organizers manage events, campaigns, and the shared library.
+- Members can update only the records explicitly permitted by Firestore rules, such as their own RSVP or owned character.
+- Private adventure recaps and DM notes remain inside protected group paths.
+- Public story highlights are deliberately published as sanitized documents on a separate public path.
+- BoardGameGeek tokens and any future third-party credentials stay in server-only environment variables.
 
-### Phase 3: Social Features (Weeks 7-8)
-- [ ] Voting and rating system
-- [ ] Comments on events
-- [ ] Activity feed
-- [ ] User connections/friends
-- [ ] Notifications
+## Project documentation
 
-### Phase 4: AI/ML Integration (Weeks 9-10)
-- [ ] Game recommendation engine (collaborative filtering)
-- [ ] Match balancing algorithm
-- [ ] Sentiment analysis on votes
-- [ ] Predictive attendance model
-- [ ] Smart scheduling suggestions
+- [Current modernization status](docs/modernization-plan.md)
+- [Board-game catalog and RPG roadmap](docs/game-catalog-rpg-roadmap.md)
+- [Testing guide](docs/agents/testing.md)
+- [Coding standards](docs/agents/coding-standards.md)
+- [Architecture decisions](docs/agents/architecture.md)
 
-### Phase 5: Polish & Launch (Weeks 11-12)
-- [ ] Performance optimization
-- [ ] Accessibility audit
-- [ ] Mobile responsiveness
-- [ ] User testing and feedback
-- [ ] Production deployment
-- [ ] Analytics integration
-
----
-
-## Success Metrics
-
-### Engagement
-- Daily/Weekly active users
-- Game nights created per week
-- Average attendance per event
-- Games played per event
-- User retention rate
-
-### Gamification
-- Achievement unlock rate
-- Leaderboard competition (users in top 10)
-- Challenge participation rate
-- Average session duration
-
-### AI/ML
-- Recommendation acceptance rate
-- Team balance satisfaction scores
-- Schedule suggestion adoption
-- Prediction accuracy (attendance)
-
----
-
-## Next Steps
-
-1. **Choose Mockup**: Review the 4 concepts and select primary design direction
-2. **Setup Project**: Initialize repository with tech stack
-3. **Create Agent Docs**: Finalize `/docs/agents` directory with coding standards
-4. **Database Setup**: Configure Supabase and create schema
-5. **First Feature (TDD)**: Build authentication with tests first
-6. **CI/CD Pipeline**: Setup GitHub Actions with Netlify deployment
-
-**Ready to start building?** 🚀
+Some older design documents describe the original Supabase/PostgreSQL proposal. They are retained as historical references and are labeled accordingly; Firebase and Firestore are the current implementation.

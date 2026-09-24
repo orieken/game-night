@@ -1,5 +1,7 @@
 # Project Structure & Setup Guide
 
+> **Historical proposal:** Much of this guide predates the Firebase implementation and still shows the original Supabase setup. Use the root README for current installation, testing, and deployment instructions.
+
 ## Recommended Project Structure
 
 ```

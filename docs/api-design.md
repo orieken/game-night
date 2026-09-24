@@ -1,5 +1,7 @@
 # API Design Documentation
 
+> **Historical proposal:** This document describes the original Supabase design and is not the current application API. The app now uses Firebase Authentication, Cloud Firestore repositories, and Netlify Functions. See the root README and `docs/modernization-plan.md` for current architecture.
+
 ## Overview
 RESTful API design for the Game Night Tracker application using Supabase backend.
 

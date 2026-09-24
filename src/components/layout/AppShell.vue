@@ -21,7 +21,8 @@ const navigation = [
   { label: 'Characters', to: '/characters', icon: '♞' },
   { label: 'Library', to: '/games', icon: '◌' },
   { label: 'Users', to: '/users', icon: '♙' },
-  { label: 'Leaderboard', to: '/leaderboard', icon: '♜' }
+  { label: 'Leaderboard', to: '/leaderboard', icon: '♜' },
+  { label: 'Rules', to: '/rules', icon: '⌘' }
 ]
 
 async function handleLogout() {

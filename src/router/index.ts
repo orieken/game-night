@@ -25,6 +25,7 @@ import VaultCharacterDetailView from '@/views/characters/VaultCharacterDetailVie
 import AdventureLogFormView from '@/views/adventure-logs/AdventureLogFormView.vue'
 import AdventureLogDetailView from '@/views/adventure-logs/AdventureLogDetailView.vue'
 import PublicStoryHighlightView from '@/views/public/PublicStoryHighlightView.vue'
+import RpgRulesReferenceView from '@/views/rules/RpgRulesReferenceView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -208,6 +209,12 @@ const router = createRouter({
       name: 'leaderboard',
       component: LeaderboardView,
       meta: { requiresAuth: true, title: 'Leaderboard' }
+    },
+    {
+      path: '/rules',
+      name: 'rpg-rules-reference',
+      component: RpgRulesReferenceView,
+      meta: { requiresAuth: true, title: '5e rules library' }
     },
     {
       path: '/:pathMatch(.*)*',

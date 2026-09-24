@@ -60,9 +60,9 @@ export const useGameNightStore = defineStore('gameNight', () => {
 
 ---
 
-## ADR-002: Backend with Supabase
+## ADR-002: Backend with Supabase (Superseded)
 
-**Status**: Accepted
+**Status**: Superseded by ADR-006
 **Date**: 2024-12-21
 
 ### Context
@@ -133,6 +133,29 @@ supabase
   )
   .subscribe()
 ```
+
+---
+
+## ADR-006: Firebase Backend with Netlify Hosting
+
+**Status**: Accepted
+**Date**: 2026-09-24
+
+### Context
+
+The original Supabase proposal was replaced before meaningful production data existed. The app needs group-scoped authorization, repeatable local integration tests, and hosting that works within the project's free-tier constraints.
+
+### Decision
+
+Use Firebase Authentication and Cloud Firestore for application data. Protect every group path with Firestore Security Rules and test those rules with the Firebase Emulator Suite. Host the Vue app and server-side third-party API adapters on Netlify.
+
+### Consequences
+
+- Firestore repositories remain behind domain interfaces.
+- The emulator suite is the default development and E2E backend.
+- Netlify Functions hold server-only credentials such as `BGG_API_TOKEN`.
+- Trusted paid Cloud Functions are not required for the current derived leaderboard.
+- Firebase web configuration may be present in the browser; authorization depends on Authentication and Security Rules.
 
 ---
 
@@ -311,7 +334,7 @@ Implement clean architecture with four distinct layers, following dependency inv
 - **Dependencies**: NONE (pure TypeScript)
 
 **4. Infrastructure Layer** (`/infrastructure`)
-- API clients (Supabase, external APIs)
+- API clients (Firebase and external APIs)
 - Repository implementations
 - Data mappers (API DTOs ↔ Domain entities)
 - External service integrations
@@ -336,7 +359,7 @@ Implement clean architecture with four distinct layers, following dependency inv
 - **Testability**: Each layer can be tested in isolation
 - **Maintainability**: Changes in one layer don't ripple everywhere
 - **Framework independence**: Can swap Vue for React without touching domain
-- **Database independence**: Can change from Supabase to Firebase
+- **Database independence**: Firebase details stay behind repository interfaces
 - **Business logic clarity**: Core rules isolated from technical details
 
 ### Consequences

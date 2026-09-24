@@ -1,5 +1,7 @@
 # Database Schema
 
+> **Historical proposal:** This PostgreSQL/Supabase schema is retained for design history only. The running app uses group-scoped Cloud Firestore collections governed by `firestore.rules` and `firestore.indexes.json`.
+
 ## Overview
 This document defines the PostgreSQL database schema for the Game Night Tracker application using Supabase.
 

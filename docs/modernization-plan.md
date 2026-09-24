@@ -1,160 +1,78 @@
-# Game Night Tracker Modernization Plan
+# Game Night Modernization Status
+
+Last updated: September 2026
 
 ## Goal
 
-Turn the existing Vue prototype into a dependable, mobile-first app for a small game group: hosts can create an event, invite people, choose games, record results, and see a useful history. Keep gamification and AI recommendations out of the first release until the event and results loop is reliable.
+Maintain a dependable, mobile-friendly app for a private game group: members can plan events, collect RSVPs, manage a shared library, record results, follow tabletop RPG campaigns, and review their history.
 
-## Current-state audit
+## Current architecture
 
-### What is already in place
+- Vue 3, TypeScript, Vite, Pinia, Vue Router, and Tailwind CSS
+- Firebase Authentication and Cloud Firestore
+- Group-scoped Firestore data protected by deployed Security Rules
+- Netlify hosting and Netlify Functions
+- BoardGameGeek XML API access through a server-only function
+- Vitest unit tests, Firebase emulator rule tests, and Playwright E2E tests
 
-- Vue 3, TypeScript, Pinia, Vue Router, Tailwind, Vitest, and Playwright are configured.
-- The repository/domain/store shape is a good foundation and should be retained.
-- Sign-up/sign-in, game-library reads, game-night listing, and event creation have initial implementations.
-- The production build and 12 unit tests pass.
+Firebase replaced the original Supabase proposal. Netlify, rather than Firebase Hosting, is the production host. The Firebase Emulator Suite serves as the isolated local/test backend, so a separate cloud development project has not been required for routine development.
 
-### Product gaps
+## Delivered product scope
 
-- No shared application shell, navigation, mobile navigation, profile, settings, empty-state system, or 404 screen.
-- Dashboard is static; its actions do not navigate and it reads no data.
-- There is no game-night detail route even though cards link to one.
-- A game can be viewed but not added or edited from the UI.
-- There are no RSVPs, invitations, selected games, sessions/results, leaderboards, history, or notifications.
-- Validation, error recovery, loading-state consistency, accessibility semantics, and success feedback are incomplete.
+### Foundation and security
 
-### Technical gaps and risks
+- [x] Replace Supabase adapters with typed Firebase repositories.
+- [x] Add Firebase Authentication session handling and guarded routes.
+- [x] Define group membership and first-table onboarding.
+- [x] Add Firestore rules, indexes, and emulator-backed authorization tests.
+- [x] Add reusable loading, empty, error, toast, navigation, and not-found states.
+- [x] Add CI checks for typecheck, lint, unit tests, rules tests, and E2E tests.
+- [x] Deploy the app on Netlify and Firestore rules to the production Firebase project.
 
-- The application is coupled directly to Supabase in the auth store and repositories, despite a clean-domain intent.
-- Supabase row types cover only three tables while the documented data model is much broader. Repository writes use TypeScript suppressions.
-- Documentation describes Supabase/PostgreSQL while the proposed target is Firebase/Firestore; both cannot remain the source of truth.
-- No Firebase configuration, Firestore security rules, emulator setup, indexes, environment template, migrations/seed data, CI workflow, or deployment configuration exists.
-- The E2E test signs up against a real backend and needs secrets/network; it is not a repeatable test fixture. Local browser execution currently also cannot bind to port 3000 in this sandbox.
-- Tailwind v4 is installed but the stylesheet uses the older `@tailwind` directives; it builds today, but styling should be normalized during the visual-system pass.
-- The initial audit found unused scaffolding/dependencies (`HelloWorld.vue`, Vite assets, Axios); those scaffold artifacts have since been removed, while consistent error presentation remains P1 work.
+### Board-game loop
 
-## Recommended product scope
+- [x] Create, edit, cancel, list, and view game nights.
+- [x] Share invitation links and collect RSVPs with capacity handling.
+- [x] Manage the shared game library and attach games to events.
+- [x] Search and import catalog metadata from BoardGameGeek with manual fallback.
+- [x] Record completed sessions, placements, scores, and attendance.
+- [x] Show event history and a Spark-plan-compatible derived leaderboard.
+- [x] Add player lists and profiles with personal statistics.
 
-### Release 1: the complete game-night loop
+### Tabletop RPG support
 
-1. Authenticate and create a profile.
-2. Create, edit, cancel, and view a game night.
-3. Invite members and collect RSVP responses.
-4. Maintain a personal/shared game library and add games to an event.
-5. Start a play session, select players, record placement/score, and finish it.
-6. See event history and a simple leaderboard.
+- [x] Add board-game, tabletop RPG, and mixed event types.
+- [x] Add system-flexible campaigns and campaign membership.
+- [x] Add campaign characters plus reusable, copyable vault characters.
+- [x] Add adventure logs, private DM notes, and campaign attendance statistics.
+- [x] Add deliberately published, sanitized public story highlights.
 
-### Later releases
+Detailed implementation history and optional rules-reference work are tracked in [game-catalog-rpg-roadmap.md](game-catalog-rpg-roadmap.md).
 
-- Ratings, comments, achievements, friends, activity feed, notifications, images, and multi-group support.
-- Recommendations and advanced scoring only after enough real session data exists.
+## Remaining release operations
 
-## Firestore architecture
+- [ ] Decide whether a separate Firebase cloud development project is useful beyond the local emulator suite.
+- [ ] Add production error monitoring with a documented response process.
+- [ ] Publish a short privacy policy appropriate for a private friends-and-family app.
+- [ ] Document Firestore backup/export expectations and a recovery check.
+- [ ] Perform periodic manual accessibility and mobile-device regression passes.
 
-### Decision
+## Future product backlog
 
-Adopt Firebase Authentication + Cloud Firestore now, before meaningful user data exists. This is a replacement, not an addition, to Supabase. Retain the domain entities and repository interfaces, then replace their infrastructure implementations with Firebase adapters. Firebase Hosting is the simplest initial deployment choice; Cloud Functions should be reserved for trusted aggregate updates and notifications.
+- [x] Optional open-license RPG rules lookup with SRD-only source enforcement; see Phase 4 of the RPG roadmap.
+- [ ] Ratings, comments, and a lightweight activity feed.
+- [ ] Achievements and challenges based on reviewed scoring rules.
+- [ ] Notifications or reminders that preserve the Firebase free-tier goal.
+- [ ] Recommendations after the group has enough historical play data.
 
-### Data model
+These items are optional follow-on work, not blockers for the current private release.
 
-Use a group as the authorization boundary. It supports private game nights cleanly and avoids attempting to express relationship joins in Firestore queries.
+## Data and authorization principles
 
-```
-users/{uid}
-  displayName, usernameLower, avatarUrl, createdAt, updatedAt
-
-groups/{groupId}
-  name, ownerId, memberIds, createdAt, updatedAt
-groups/{groupId}/members/{uid}
-  role: owner | organizer | member, displayName, avatarUrl, joinedAt
-groups/{groupId}/games/{gameId}
-  name, description, minPlayers, maxPlayers, durationMinutes,
-  complexity, categories, imageUrl, bggId, isAvailable, createdBy,
-  createdAt, updatedAt
-groups/{groupId}/events/{eventId}
-  title, description, startsAt, location, hostId, status,
-  capacity, visibility, plannedGameIds, attendeeCounts,
-  createdAt, updatedAt
-groups/{groupId}/events/{eventId}/rsvps/{uid}
-  status: invited | going | maybe | declined | attended | noShow,
-  respondedAt, updatedAt
-groups/{groupId}/events/{eventId}/sessions/{sessionId}
-  gameId, startedAt, endedAt, durationMinutes, notes, createdBy
-groups/{groupId}/events/{eventId}/sessions/{sessionId}/players/{uid}
-  placement, score, team, displayName
-```
-
-Store document IDs in parent documents instead of duplicated game/user records where possible. Denormalize only stable display fields needed for a list. For the first private-table release, derive the leaderboard on demand from host-protected completed session results so the project can remain on Firebase's no-cost Spark plan without accepting client-authored aggregate totals.
-
-### Query and security plan
-
-- Query events with `orderBy(startsAt)` and filters for `status`; query only inside a group the signed-in user belongs to.
-- Create composite indexes only after queries are finalized and document each required index in Firebase configuration.
-- Firestore rules must verify `request.auth != null` and group membership for every group subcollection. Only owners/organizers can create or edit events; members can update only their own RSVP; only organizers can finalize session results.
-- Use the Firebase Emulator Suite in local development and CI. Keep Firebase web config in `.env.local`; commit only `.env.example`. Never put service-account credentials in the client.
-
-## Visual direction: "After Hours Arcade"
-
-Choose a warm, contemporary game-table look rather than the current generic dark-indigo UI: tactile enough for board games, but restrained enough for daily use.
-
-- Palette: ink `#10131A`, surface `#181D27`, elevated surface `#222938`, cream `#F7F1E6`, coral `#FF6B5E`, electric violet `#8B5CF6`, mint `#57D2A4`, and muted slate text.
-- Typography: Manrope for interface/body, Fraunces for select display headings, and tabular numerals for scores. Use system fallbacks until self-hosting fonts is deliberately added.
-- Layout: persistent desktop rail + compact mobile bottom navigation; a centered content canvas; a clear top-level “Plan a night” action.
-- Components: 12px card radius, 8px spacing scale, subtle borders, two elevation levels, and status chips with both icon/text—not color alone.
-- Dashboard: next event as the hero, then “Tonight’s library,” “Recent results,” and concise personal stats. Avoid charts until there is enough data to make them useful.
-- Event detail: timeline, RSVP roster, selected games, sessions/results, and host controls in one place.
-- Accessibility: visible focus states, 44px minimum targets, semantic buttons/labels, keyboard-accessible dialogs, reduced-motion support, and tested contrast.
-
-## Prioritized todo list
-
-### P0 — establish the foundation
-
-- [ ] Confirm Firebase is replacing Supabase and create separate Firebase dev and production projects.
-- [ ] Add Firebase Auth, Firestore, Firebase Hosting, Emulator Suite, `.env.example`, and Firebase configuration files. (Client/config/rules are started; Firebase project and hosting remain.)
-- [x] Replace `supabaseClient` and the three Supabase repositories with typed Firebase repository adapters; remove `src/types/supabase.ts` and all type suppressions.
-- [x] Write Firestore rules, index definitions, and emulator rule tests before deploying.
-- [x] Add an auth-session listener and make route guards wait for initialization to prevent redirect flicker.
-- [x] Define the group/membership model and create the first-group onboarding flow.
-- [x] Remove stale scaffold files/dependencies and add a non-destructive lint script (keep autofix as a separate command).
-
-### P1 — deliver the minimum useful product
-
-- [x] Build app shell, navigation, shared page header, toast/error system, empty states, loading states, and not-found page.
-- [x] Implement event detail, edit, cancel, and ownership checks; repair the broken event-card destination.
-- [x] Implement invite/RSVP flows with capacity handling.
-- [x] Implement game create/edit/search/filter and event game selection.
-- [x] Implement session start, player selection, results entry, edit/delete safeguards, and event history.
-- [x] Create a basic leaderboard from completed sessions, derived read-only from host-protected results for Spark-plan compatibility.
-- [x] Apply the new tokens/components across auth, dashboard, events, games, and mobile breakpoints.
-
-### P2 — quality, operations, and release
-
-- [x] Add domain tests for RSVP transitions, capacity, result validation, and scoring.
-- [x] Test Firebase repositories through emulator-backed browser flows; seed deterministic E2E data rather than registering against production.
-- [x] Run the repaired IPv4-bound Chromium Playwright suite in CI; add Firefox/WebKit after the core flows are stable.
-- [x] Add automated Axe and keyboard accessibility checks for P1 flows.
-- [x] Complete a manual keyboard and screen-reader pass for P1 flows. (Verified landmarks, heading structure, focus visibility/order, skip navigation, route focus, page titles, form labels, status announcements, and reduced motion.)
-- [x] Add GitHub Actions for typecheck, lint, unit tests, emulator integration tests, and E2E tests.
-- [ ] Configure preview/production hosting, error monitoring, basic privacy policy, and backup/export expectations.
-
-### P3 — only after P1/P2 are stable
-
-- [ ] Ratings/comments and a lightweight activity feed.
-- [ ] Achievements/challenges, based on audited scoring rules.
-- [ ] Notifications/reminders via Cloud Functions.
-- [ ] Game discovery/import and tabletop RPG support; track the phased work in [Board Game Catalog and Tabletop RPG Roadmap](game-catalog-rpg-roadmap.md).
-- [ ] Recommendations once the group has enough historical plays.
-
-## Suggested sequence
-
-1. Make the Firebase decision and scaffold/dev environment.
-2. Ship the design system and application shell alongside the auth/onboarding rewrite.
-3. Complete events, RSVPs, library, and result tracking vertically, one workflow at a time.
-4. Lock down rules and automate emulator-backed tests before inviting real users.
-5. Add leaderboards, polish responsive/accessibility behavior, then deploy a small private beta.
-
-## Open decisions to settle before implementation
-
-- Is the first release for one private household/group, or must users create and join multiple groups?
-- Are guests required to have accounts, or can a host record guest players?
-- Resolved: games are owned by each group for the first release.
-- Do you want Firebase Hosting, or do you already prefer a different host?
+- A group is the primary authorization boundary.
+- Owners and organizers control shared table resources.
+- Members can edit only their own permitted records.
+- Competitive board-game statistics and RPG attendance statistics remain separate.
+- Sensitive campaign data stays in protected group paths.
+- Anonymous access is limited to explicitly published, sanitized story documents.
+- Third-party credentials remain in server-only environment variables.
