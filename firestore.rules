@@ -168,6 +168,8 @@ service cloud.firestore {
               (characterData.portraitUrl == null || characterData.portraitUrl is string) &&
               (characterData.externalSheetUrl == null || characterData.externalSheetUrl is string) &&
               (characterData.publicNotes == null || characterData.publicNotes is string) &&
+              characterData.fieldValues is map &&
+              characterData.fieldValues.size() <= 50 &&
               characterData.createdById is string &&
               characterData.createdAt is timestamp &&
               characterData.updatedAt is timestamp;

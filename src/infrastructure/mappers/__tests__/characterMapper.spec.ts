@@ -14,6 +14,7 @@ describe('characterMapper', () => {
       portraitUrl: 'https://example.com/mira.png',
       externalSheetUrl: 'https://example.com/mira-sheet',
       publicNotes: 'A witch traveling through Davokar.',
+      fieldValues: { archetype: 'Witch', corruption: 2, shadowVisible: true },
       createdById: 'player-1',
       createdAt: timestamp,
       updatedAt: timestamp
@@ -26,5 +27,24 @@ describe('characterMapper', () => {
       createdAt: date,
       updatedAt: date
     })
+  })
+
+  it('defaults older character documents to no custom values', () => {
+    const date = new Date('2026-09-23T18:00:00.000Z')
+    const timestamp = { toDate: () => date } as Timestamp
+    const document = {
+      name: 'Mira Nightshade',
+      playerId: 'player-1',
+      pronouns: null,
+      status: 'active',
+      portraitUrl: null,
+      externalSheetUrl: null,
+      publicNotes: null,
+      createdById: 'player-1',
+      createdAt: timestamp,
+      updatedAt: timestamp
+    } satisfies CharacterDocument
+
+    expect(toCharacter('campaign-1', 'character-1', document).fieldValues).toEqual({})
   })
 })

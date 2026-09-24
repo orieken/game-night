@@ -28,6 +28,7 @@ export const characterRepository: ICharacterRepository = {
       portraitUrl: character.portraitUrl,
       externalSheetUrl: character.externalSheetUrl,
       publicNotes: character.publicNotes,
+      fieldValues: character.fieldValues,
       createdById: character.createdById,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
@@ -43,7 +44,8 @@ export const characterRepository: ICharacterRepository = {
       status: character.status,
       portraitUrl: character.portraitUrl,
       externalSheetUrl: character.externalSheetUrl,
-      publicNotes: character.publicNotes
+      publicNotes: character.publicNotes,
+      fieldValues: character.fieldValues
     }).filter(([, value]) => value !== undefined))
     const characterRef = doc(charactersCollection(groupId, campaignId), id)
     await updateDoc(characterRef, { ...updates, updatedAt: serverTimestamp() })

@@ -1,4 +1,5 @@
 export type CharacterStatus = 'active' | 'inactive' | 'retired' | 'deceased'
+export type CharacterFieldValue = string | number | boolean | null
 
 export interface Character {
   id: string
@@ -10,6 +11,7 @@ export interface Character {
   portraitUrl: string | null
   externalSheetUrl: string | null
   publicNotes: string | null
+  fieldValues: Record<string, CharacterFieldValue>
   createdById: string
   createdAt: Date
   updatedAt: Date

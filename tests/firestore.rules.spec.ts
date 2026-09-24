@@ -275,6 +275,7 @@ describe('Firestore security rules', () => {
       portraitUrl: null,
       externalSheetUrl: null,
       publicNotes: 'A witch traveling through Davokar.',
+      fieldValues: { archetype: 'Witch', corruption: 2, shadowVisible: true },
       createdById: 'player-1',
       createdAt: new Date(),
       updatedAt: new Date()
@@ -285,12 +286,16 @@ describe('Firestore security rules', () => {
     await assertSucceeds(getDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1')))
     await assertFails(getDoc(doc(otherDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1')))
     await assertSucceeds(updateDoc(characterRef, { publicNotes: 'Updated by the player.', updatedAt: new Date() }))
+    await assertSucceeds(updateDoc(characterRef, { fieldValues: { archetype: 'Witch', corruption: 3 }, updatedAt: new Date() }))
     await assertFails(updateDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1'), {
       publicNotes: 'A DM edit.',
       updatedAt: new Date()
     }))
     await assertFails(updateDoc(characterRef, { playerId: 'other-1', updatedAt: new Date() }))
     await assertFails(deleteDoc(characterRef))
+
+    const tooManyFields = Object.fromEntries(Array.from({ length: 51 }, (_, index) => [`field-${index}`, index]))
+    await assertFails(updateDoc(characterRef, { fieldValues: tooManyFields, updatedAt: new Date() }))
 
     await seedCampaign('group-1', 'archived-campaign', {
       status: 'archived',

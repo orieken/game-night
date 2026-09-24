@@ -1,7 +1,8 @@
-import type { Character } from '@/domain/entities/Character'
+import type { Character, CharacterFieldValue } from '@/domain/entities/Character'
 import type { Timestamp } from 'firebase/firestore'
 
-export interface CharacterDocument extends Omit<Character, 'id' | 'campaignId' | 'createdAt' | 'updatedAt'> {
+export interface CharacterDocument extends Omit<Character, 'id' | 'campaignId' | 'fieldValues' | 'createdAt' | 'updatedAt'> {
+  fieldValues?: Record<string, CharacterFieldValue>
   createdAt: Timestamp
   updatedAt: Timestamp
 }
@@ -17,6 +18,7 @@ export function toCharacter(campaignId: string, id: string, row: CharacterDocume
     portraitUrl: row.portraitUrl,
     externalSheetUrl: row.externalSheetUrl,
     publicNotes: row.publicNotes,
+    fieldValues: row.fieldValues ?? {},
     createdById: row.createdById,
     createdAt: row.createdAt.toDate(),
     updatedAt: row.updatedAt.toDate()
