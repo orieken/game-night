@@ -248,6 +248,31 @@ service cloud.firestore {
             request.resource.data.createdById == resource.data.createdById &&
             request.resource.data.createdAt == resource.data.createdAt;
           allow delete: if false;
+
+          match /dmNotes/{noteId} {
+            function validDmNote(noteData) {
+              return noteData.body is string &&
+                noteData.body.size() <= 20000 &&
+                noteData.updatedById is string &&
+                noteData.createdAt is timestamp &&
+                noteData.updatedAt is timestamp;
+            }
+
+            allow read: if noteId == 'private' && isLogManager();
+            allow create: if noteId == 'private' &&
+              isLogManager() &&
+              exists(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId)/adventureLogs/$(logId)) &&
+              logCampaignData().status != 'archived' &&
+              validDmNote(request.resource.data) &&
+              request.resource.data.updatedById == request.auth.uid;
+            allow update: if noteId == 'private' &&
+              isLogManager() &&
+              logCampaignData().status != 'archived' &&
+              validDmNote(request.resource.data) &&
+              request.resource.data.updatedById == request.auth.uid &&
+              request.resource.data.createdAt == resource.data.createdAt;
+            allow delete: if false;
+          }
         }
       }
 

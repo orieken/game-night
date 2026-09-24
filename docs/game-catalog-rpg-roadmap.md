@@ -60,7 +60,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Add campaign session logs linked to their scheduled events.
 - [x] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
 - [x] Add adventure-log create, edit, list, and detail views for campaign participants.
-- [ ] Keep private DM notes in separately protected documents that ordinary campaign members cannot read.
+- [x] Keep private DM notes in separately protected documents that ordinary campaign members cannot read.
 - [ ] Add an optional short public story highlight that must be explicitly published and contains no private recap or DM-note fields.
 - [ ] Publish public highlights through separate sanitized documents/routes so anonymous readers never receive the private campaign document.
 - [ ] Add campaign history and RPG attendance statistics without mixing RPG sessions into the competitive board-game leaderboard.

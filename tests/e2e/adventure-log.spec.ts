@@ -22,6 +22,7 @@ test('a campaign manager records and edits an adventure that players can read', 
   await page.getByLabel('Quests and objectives').fill('Discover what the key opens.')
   await page.getByLabel('Next-session hooks').fill('A bell rings beneath the ruins.')
   await page.getByLabel('Memorable quotes and moments').fill('Aric opened the door anyway.\nThe ravens answered in unison.')
+  await page.getByRole('textbox', { name: 'Private DM notes' }).fill('The silver key awakens the sleeping sorcerer.')
   await page.getByRole('button', { name: 'Create entry' }).click()
 
   await expect(page).toHaveURL(new RegExp(`/campaigns/${E2E_CAMPAIGN.id}/adventure-logs/[^/]+$`))
@@ -32,6 +33,7 @@ test('a campaign manager records and edits an adventure that players can read', 
   await expect(attendeeList.getByText(E2E_USER.displayName)).toBeVisible()
   await expect(attendeeList.getByText(E2E_GUEST.displayName)).toBeVisible()
   await expect(page.getByRole('link', { name: /Public RSVP Test/ })).toBeVisible()
+  await expect(page.getByText('The silver key awakens the sleeping sorcerer.')).toBeVisible()
 
   const adventureUrl = page.url()
   await page.getByRole('button', { name: 'Edit entry' }).click()
@@ -45,6 +47,8 @@ test('a campaign manager records and edits an adventure that players can read', 
   await guestPage.goto(adventureUrl)
   await expect(guestPage.getByRole('heading', { name: 'Into Davokar', exact: true })).toBeVisible()
   await expect(guestPage.getByText('The party crossed the forest edge and secured the ruined watchtower.')).toBeVisible()
+  await expect(guestPage.getByText('The silver key awakens the sleeping sorcerer.')).toHaveCount(0)
+  await expect(guestPage.getByRole('heading', { name: 'Private DM notes' })).toHaveCount(0)
   await expect(guestPage.getByRole('button', { name: 'Edit entry' })).toHaveCount(0)
   await guestContext.close()
 })

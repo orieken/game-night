@@ -347,6 +347,26 @@ describe('Firestore security rules', () => {
     await assertFails(updateDoc(logRef, { eventId: 'event-2', updatedAt: new Date() }))
     await assertFails(updateDoc(logRef, { eventId: 'missing-event', updatedAt: new Date() }))
     await assertFails(deleteDoc(logRef))
+
+    const ownerNoteRef = doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1', 'dmNotes', 'private')
+    const privateNote = {
+      body: 'The iron key is cursed.',
+      updatedById: 'owner-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    await assertSucceeds(setDoc(ownerNoteRef, privateNote))
+    await assertSucceeds(getDoc(ownerNoteRef))
+    await assertFails(getDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1', 'dmNotes', 'private')))
+    await assertFails(getDoc(doc(otherDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1', 'dmNotes', 'private')))
+    await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1', 'dmNotes', 'private'), {
+      ...privateNote,
+      updatedById: 'player-1'
+    }))
+    await assertFails(setDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'missing-log', 'dmNotes', 'private'), privateNote))
+    await assertSucceeds(updateDoc(ownerNoteRef, { body: 'The key wakes a sorcerer.', updatedById: 'owner-1', updatedAt: new Date() }))
+    await assertFails(updateDoc(ownerNoteRef, { createdAt: new Date(0), updatedAt: new Date() }))
+    await assertFails(deleteDoc(ownerNoteRef))
   })
 
   it('requires an organizer to create an event as themselves', async () => {

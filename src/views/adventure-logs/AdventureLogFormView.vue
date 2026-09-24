@@ -48,7 +48,8 @@ const form = reactive({
   loot: '',
   quests: '',
   memorableMoments: '',
-  nextSessionHooks: ''
+  nextSessionHooks: '',
+  privateDmNotes: ''
 })
 
 async function initialize() {
@@ -66,11 +67,16 @@ async function initialize() {
   if (logId.value) {
     await adventureLogStore.fetchLogById(groupId, campaignId.value, logId.value)
     if (adventureLogStore.currentLog) populateForm(adventureLogStore.currentLog)
+    if (canManage.value) {
+      const note = await adventureLogStore.fetchDmNote(groupId, campaignId.value, logId.value)
+      form.privateDmNotes = note?.body ?? ''
+    }
   } else resetForm()
   ready.value = true
 }
 
 function resetForm() {
+  adventureLogStore.currentDmNote = null
   form.eventId = ''
   form.sessionNumber = Math.max(0, ...adventureLogStore.logs.map((log) => log.sessionNumber)) + 1
   form.title = ''
@@ -83,6 +89,7 @@ function resetForm() {
   form.quests = ''
   form.memorableMoments = ''
   form.nextSessionHooks = ''
+  form.privateDmNotes = ''
 }
 
 function populateForm(log: AdventureLog) {
@@ -136,6 +143,10 @@ async function submit() {
     toastStore.show(adventureLogStore.error ?? 'Unable to save the adventure entry.', 'error')
     return
   }
+  if ((form.privateDmNotes.trim() || adventureLogStore.currentDmNote) && !await adventureLogStore.saveDmNote(groupId, campaignId.value, saved.id, form.privateDmNotes.trim(), userId)) {
+    toastStore.show('The adventure entry was saved, but the private DM notes could not be saved.', 'error')
+    return
+  }
   toastStore.show(isEditing.value ? 'Adventure entry updated.' : 'Adventure entry created.', 'success')
   await router.push(`/campaigns/${campaignId.value}/adventure-logs/${saved.id}`)
 }
@@ -163,7 +174,9 @@ watch([() => groupStore.activeGroupId, campaignId, logId], () => void initialize
 
         <section class="space-y-5 border-t border-white/10 pt-7" aria-labelledby="story-heading"><h2 id="story-heading" class="text-lg font-bold text-white">The story</h2><div><label for="recap" class="app-label">Group-visible recap</label><textarea id="recap" v-model="form.recap" rows="7" class="app-field"></textarea></div><div class="grid gap-5 sm:grid-cols-2"><div><label for="progress" class="app-label">Milestone or XP progress</label><textarea id="progress" v-model="form.progress" rows="3" class="app-field"></textarea></div><div><label for="loot" class="app-label">Loot and rewards</label><textarea id="loot" v-model="form.loot" rows="3" class="app-field"></textarea></div><div><label for="quests" class="app-label">Quests and objectives</label><textarea id="quests" v-model="form.quests" rows="3" class="app-field"></textarea></div><div><label for="next-hooks" class="app-label">Next-session hooks</label><textarea id="next-hooks" v-model="form.nextSessionHooks" rows="3" class="app-field"></textarea></div></div><div><label for="memorable-moments" class="app-label">Memorable quotes and moments</label><textarea id="memorable-moments" v-model="form.memorableMoments" rows="4" class="app-field" placeholder="One moment per line"></textarea></div></section>
 
-        <div class="flex justify-end gap-3 border-t border-white/10 pt-5"><AppButton type="button" variant="secondary" @click="router.back()">Cancel</AppButton><AppButton type="submit" :loading="adventureLogStore.loading">{{ isEditing ? 'Save entry' : 'Create entry' }}</AppButton></div>
+        <section class="space-y-3 border-t border-amber-300/20 pt-7" aria-labelledby="private-notes-heading"><div><h2 id="private-notes-heading" class="text-lg font-bold text-amber-100">Private DM notes</h2><p class="mt-1 text-sm text-amber-100/70">Stored separately and visible only to campaign DMs and table organizers.</p></div><textarea id="private-dm-notes" v-model="form.privateDmNotes" rows="6" maxlength="20000" class="app-field border-amber-300/20" aria-label="Private DM notes" placeholder="Secrets, future encounters, NPC motives, and other notes players should not see."></textarea></section>
+
+        <div class="flex justify-end gap-3 border-t border-white/10 pt-5"><AppButton type="button" variant="secondary" @click="router.back()">Cancel</AppButton><AppButton type="submit" :loading="adventureLogStore.loading || adventureLogStore.dmNoteLoading">{{ isEditing ? 'Save entry' : 'Create entry' }}</AppButton></div>
       </form>
     </template>
   </div>
