@@ -52,9 +52,9 @@ Detailed implementation history and optional rules-reference work are tracked in
 ## Remaining release operations
 
 - [ ] Decide whether a separate Firebase cloud development project is useful beyond the local emulator suite.
-- [ ] Add production error monitoring with a documented response process.
+- [x] Add privacy-conscious production error monitoring with a documented response process.
 - [ ] Publish a short privacy policy appropriate for a private friends-and-family app.
-- [ ] Document Firestore backup/export expectations and a recovery check.
+- [x] Add a Spark-compatible Firestore backup, guarded merge recovery, verification command, and recovery runbook.
 - [ ] Perform periodic manual accessibility and mobile-device regression passes.
 
 ## Future product backlog

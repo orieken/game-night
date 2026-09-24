@@ -13,6 +13,10 @@
     "test:e2e": "firebase emulators:exec --only auth,firestore --project demo-game-night \"npm run test:e2e:playwright\"",
     "test:e2e:headed": "firebase emulators:exec --only auth,firestore --project demo-game-night \"npm run test:e2e:playwright -- --headed\"",
     "test:e2e:playwright": "playwright test --project=chromium",
+    "firebase:backup": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/firestore-admin.mjs backup",
+    "firebase:restore": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/firestore-admin.mjs restore",
+    "firebase:verify": "node --env-file-if-exists=.env --env-file-if-exists=.env.local scripts/firestore-admin.mjs verify",
+    "firebase:recovery-check": "firebase emulators:exec --only firestore --project demo-game-night \"node scripts/firestore-recovery-check.mjs\"",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
@@ -40,6 +44,7 @@
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.6.2",
+    "firebase-admin": "^14.5.0",
     "firebase-tools": "^15.30.2",
     "happy-dom": "^20.0.11",
     "typescript": "~5.9.3",
@@ -47,6 +52,7 @@
     "vite": "^7.2.4",
     "vite-plugin-vue-devtools": "^8.0.5",
     "vitest": "^4.0.16",
+    "vue-eslint-parser": "^10.4.1",
     "vue-tsc": "^3.1.4"
   }
 }

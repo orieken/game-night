@@ -17,6 +17,9 @@ playwright-report/
 test-results/
 firestore-debug.log
 /game-night-docs.zip
+/backups/
+*service-account*.json
+*firebase-adminsdk*.json
 
 # Editor directories and files
 .vscode/

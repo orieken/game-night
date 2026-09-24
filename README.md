@@ -72,6 +72,7 @@ npm run test:unit -- --run
 npm run test:rules
 npm run test:e2e
 npm run test:e2e:headed
+npm run firebase:recovery-check
 npm run build
 ```
 
@@ -99,6 +100,16 @@ Deploy Firestore rules and indexes separately:
 npx firebase deploy --only firestore:rules,firestore:indexes --project rieken-game-night
 ```
 
+Create a local, Spark-plan-compatible Firestore backup:
+
+```sh
+export GOOGLE_APPLICATION_CREDENTIALS=/private/path/to/service-account.json
+export FIREBASE_PROJECT_ID=rieken-game-night
+npm run firebase:backup
+```
+
+Recovery is merge-only and requires a dry run plus explicit project confirmation. Follow the complete [Firestore backup and recovery runbook](docs/firestore-backup-recovery.md); backup JSON and service-account files must never be committed.
+
 ## Data and security model
 
 - A group/table is the main authorization boundary.
@@ -115,5 +126,7 @@ npx firebase deploy --only firestore:rules,firestore:indexes --project rieken-ga
 - [Testing guide](docs/agents/testing.md)
 - [Coding standards](docs/agents/coding-standards.md)
 - [Architecture decisions](docs/agents/architecture.md)
+- [Production error monitoring and response](docs/production-error-runbook.md)
+- [Firestore backup and recovery](docs/firestore-backup-recovery.md)
 
 Some older design documents describe the original Supabase/PostgreSQL proposal. They are retained as historical references and are labeled accordingly; Firebase and Firestore are the current implementation.
