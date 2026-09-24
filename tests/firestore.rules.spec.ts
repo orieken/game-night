@@ -304,6 +304,51 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'archived-campaign', 'characters', 'character-2'), character))
   })
 
+  it('lets campaign managers maintain group-visible adventure logs linked to RPG events', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'player-1', role: 'member' },
+      { id: 'other-1', role: 'member' }
+    ])
+    await seedCampaign('group-1', 'campaign-1', { memberIds: ['owner-1', 'player-1'] })
+    await seedEvent('group-1', 'event-1', { eventType: 'tabletop_rpg', campaignId: 'campaign-1' })
+    await seedEvent('group-1', 'event-2', { eventType: 'tabletop_rpg', campaignId: 'campaign-1' })
+
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const playerDatabase = testEnvironment.authenticatedContext('player-1').firestore()
+    const otherDatabase = testEnvironment.authenticatedContext('other-1').firestore()
+    const logRef = doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1')
+    const log = {
+      eventId: 'event-1',
+      sessionNumber: 1,
+      title: 'Into Davokar',
+      sessionDate: new Date(),
+      attendeeIds: ['owner-1', 'player-1'],
+      characterIds: ['character-1'],
+      recap: 'The party crossed the forest boundary.',
+      progress: 'Milestone reached.',
+      loot: 'An old iron key.',
+      quests: 'Find the ruined watchtower.',
+      memorableMoments: ['Mira argued with a raven.'],
+      nextSessionHooks: 'A bell rings beneath the ruins.',
+      createdById: 'owner-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    await assertSucceeds(setDoc(logRef, log))
+    await assertSucceeds(getDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1')))
+    await assertFails(getDoc(doc(otherDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-1')))
+    await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'adventureLogs', 'log-2'), {
+      ...log,
+      createdById: 'player-1'
+    }))
+    await assertSucceeds(updateDoc(logRef, { recap: 'The party returned safely.', updatedAt: new Date() }))
+    await assertFails(updateDoc(logRef, { eventId: 'event-2', updatedAt: new Date() }))
+    await assertFails(updateDoc(logRef, { eventId: 'missing-event', updatedAt: new Date() }))
+    await assertFails(deleteDoc(logRef))
+  })
+
   it('requires an organizer to create an event as themselves', async () => {
     await seedGroup('group-1', 'owner-1', [
       { id: 'owner-1', role: 'owner' },

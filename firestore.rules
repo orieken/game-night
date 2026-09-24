@@ -190,6 +190,65 @@ service cloud.firestore {
             request.resource.data.createdAt == resource.data.createdAt;
           allow delete: if false;
         }
+
+        match /adventureLogs/{logId} {
+          function logCampaignData() {
+            return get(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId)).data;
+          }
+
+          function isLogParticipant() {
+            return isMember(groupId) && (
+              request.auth.uid in logCampaignData().memberIds ||
+              request.auth.uid in logCampaignData().dmIds
+            );
+          }
+
+          function isLogManager() {
+            return isOrganizer(groupId) ||
+              (isMember(groupId) && request.auth.uid in logCampaignData().dmIds);
+          }
+
+          function validLinkedEvent(eventId) {
+            let eventPath = /databases/$(database)/documents/groups/$(groupId)/events/$(eventId);
+            return eventId is string &&
+              exists(eventPath) &&
+              get(eventPath).data.get('campaignId', null) == campaignId &&
+              get(eventPath).data.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed'];
+          }
+
+          function validAdventureLog(logData) {
+            return validLinkedEvent(logData.eventId) &&
+              logData.sessionNumber is int &&
+              logData.sessionNumber > 0 &&
+              logData.title is string &&
+              logData.title.size() > 0 &&
+              logData.sessionDate is timestamp &&
+              logData.attendeeIds is list &&
+              logData.characterIds is list &&
+              (logData.recap == null || logData.recap is string) &&
+              (logData.progress == null || logData.progress is string) &&
+              (logData.loot == null || logData.loot is string) &&
+              (logData.quests == null || logData.quests is string) &&
+              logData.memorableMoments is list &&
+              (logData.nextSessionHooks == null || logData.nextSessionHooks is string) &&
+              logData.createdById is string &&
+              logData.createdAt is timestamp &&
+              logData.updatedAt is timestamp;
+          }
+
+          allow read: if isOrganizer(groupId) || isLogParticipant();
+          allow create: if isLogManager() &&
+            logCampaignData().status != 'archived' &&
+            validAdventureLog(request.resource.data) &&
+            request.resource.data.createdById == request.auth.uid;
+          allow update: if isLogManager() &&
+            logCampaignData().status != 'archived' &&
+            validAdventureLog(request.resource.data) &&
+            request.resource.data.eventId == resource.data.eventId &&
+            request.resource.data.createdById == resource.data.createdById &&
+            request.resource.data.createdAt == resource.data.createdAt;
+          allow delete: if false;
+        }
       }
 
       match /events/{eventId} {
