@@ -1,7 +1,7 @@
 import { deleteApp, initializeApp } from 'firebase/app'
 import { connectAuthEmulator, createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { connectFirestoreEmulator, doc, getFirestore, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore'
-import { E2E_CAMPAIGN, E2E_GAME, E2E_GUEST, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
+import { E2E_CAMPAIGN, E2E_CHARACTER, E2E_GAME, E2E_GUEST, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
 
 const projectId = 'demo-game-night'
 
@@ -110,6 +110,25 @@ export default async function globalSetup() {
       { id: 'shadow-visible', label: 'Shadow visible', type: 'boolean', required: false, options: [] },
       { id: 'abilities', label: 'Abilities', type: 'long_text', required: false, options: [] }
     ],
+    createdById: userId,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  })
+
+  await setDoc(doc(groupRef, 'campaigns', E2E_CAMPAIGN.id, 'characters', E2E_CHARACTER.id), {
+    name: E2E_CHARACTER.name,
+    playerId: userId,
+    pronouns: 'he/him',
+    status: 'active',
+    portraitUrl: null,
+    externalSheetUrl: null,
+    publicNotes: 'A seasoned warrior exploring Davokar.',
+    fieldValues: {
+      archetype: 'Warrior',
+      corruption: 1,
+      'shadow-visible': true,
+      abilities: 'Iron Fist and Man-at-Arms'
+    },
     createdById: userId,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()

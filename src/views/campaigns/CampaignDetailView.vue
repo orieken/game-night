@@ -14,6 +14,8 @@ import { useGameNightStore } from '@/stores/gameNightStore'
 import { format } from 'date-fns'
 import { useCharacterStore } from '@/stores/characterStore'
 import CharacterCard from '@/components/campaign/CharacterCard.vue'
+import { useAdventureLogStore } from '@/stores/adventureLogStore'
+import AdventureLogCard from '@/components/campaign/AdventureLogCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -23,6 +25,7 @@ const groupStore = useGroupStore()
 const toastStore = useToastStore()
 const gameNightStore = useGameNightStore()
 const characterStore = useCharacterStore()
+const adventureLogStore = useAdventureLogStore()
 const confirmingArchive = ref(false)
 const campaign = computed(() => campaignStore.currentCampaign)
 const memberRole = computed(() => groupStore.members.find((member) => member.userId === authStore.user?.id)?.role)
@@ -44,13 +47,17 @@ async function loadCampaign() {
   const id = route.params.id
   confirmingArchive.value = false
   characterStore.reset()
+  adventureLogStore.reset()
   if (groupId && typeof id === 'string') {
     await Promise.all([
       campaignStore.fetchCampaignById(groupId, id),
       groupStore.fetchMembers(groupId),
       gameNightStore.fetchGameNights(groupId)
     ])
-    if (canViewRoster.value) await characterStore.fetchCharacters(groupId, id)
+    if (canViewRoster.value) await Promise.all([
+      characterStore.fetchCharacters(groupId, id),
+      adventureLogStore.fetchLogs(groupId, id)
+    ])
   }
 }
 
@@ -92,6 +99,17 @@ watch([() => groupStore.activeGroupId, () => route.params.id], loadCampaign, { i
             <div v-else class="mt-5 grid gap-3 sm:grid-cols-2">
               <CharacterCard v-for="item in characterStore.characters" :key="item.id" :character="item" :campaign-id="campaign.id" :player-name="groupStore.members.find((member) => member.userId === item.playerId)?.displayName ?? 'Campaign player'" />
             </div>
+          </section>
+          <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
+            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div><h2 class="text-lg font-bold text-white">Adventure log</h2><p class="mt-1 text-sm text-slate-400">Recaps, party progress, memorable moments, and what comes next.</p></div>
+              <AppButton v-if="canManage && campaign.status !== 'archived'" @click="router.push(`/campaigns/${campaign.id}/adventure-logs/new`)">Record adventure</AppButton>
+            </div>
+            <LoadingState v-if="adventureLogStore.loading" class="mt-5" label="Loading adventure log…" />
+            <ErrorState v-else-if="adventureLogStore.error" class="mt-5" :message="adventureLogStore.error" :retryable="false" />
+            <p v-else-if="!canViewRoster" class="mt-5 rounded-xl bg-white/5 p-4 text-sm text-slate-400">Adventure entries are visible to campaign participants.</p>
+            <p v-else-if="!adventureLogStore.logs.length" class="mt-5 rounded-xl bg-white/5 p-4 text-sm text-slate-400">No adventures have been recorded yet.</p>
+            <div v-else class="mt-5 grid gap-3 sm:grid-cols-2"><AdventureLogCard v-for="entry in adventureLogStore.logs" :key="entry.id" :log="entry" :campaign-id="campaign.id" /></div>
           </section>
           <section class="rounded-2xl border border-white/10 bg-[#181d27] p-6 sm:p-8">
             <h2 class="text-lg font-bold text-white">Character setup</h2>

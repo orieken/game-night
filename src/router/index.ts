@@ -19,6 +19,8 @@ import CampaignFormView from '@/views/campaigns/CampaignFormView.vue'
 import CampaignDetailView from '@/views/campaigns/CampaignDetailView.vue'
 import CharacterFormView from '@/views/characters/CharacterFormView.vue'
 import CharacterDetailView from '@/views/characters/CharacterDetailView.vue'
+import AdventureLogFormView from '@/views/adventure-logs/AdventureLogFormView.vue'
+import AdventureLogDetailView from '@/views/adventure-logs/AdventureLogDetailView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -124,6 +126,24 @@ const router = createRouter({
       name: 'character-detail',
       component: CharacterDetailView,
       meta: { requiresAuth: true, title: 'Character sheet' }
+    },
+    {
+      path: '/campaigns/:campaignId/adventure-logs/new',
+      name: 'adventure-log-create',
+      component: AdventureLogFormView,
+      meta: { requiresAuth: true, title: 'Record adventure' }
+    },
+    {
+      path: '/campaigns/:campaignId/adventure-logs/:logId/edit',
+      name: 'adventure-log-edit',
+      component: AdventureLogFormView,
+      meta: { requiresAuth: true, title: 'Edit adventure' }
+    },
+    {
+      path: '/campaigns/:campaignId/adventure-logs/:logId',
+      name: 'adventure-log-detail',
+      component: AdventureLogDetailView,
+      meta: { requiresAuth: true, title: 'Adventure log' }
     },
     {
       path: '/invite/:code',

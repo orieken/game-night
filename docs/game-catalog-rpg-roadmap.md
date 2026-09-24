@@ -59,12 +59,13 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Add character create, edit, retire, detail, and campaign-roster views.
 - [x] Add campaign session logs linked to their scheduled events.
 - [x] Record session number, title, date, attendees, characters present, group-visible recap, milestone/XP progress, loot, quests, memorable quotes/moments, and next-session hooks.
+- [x] Add adventure-log create, edit, list, and detail views for campaign participants.
 - [ ] Keep private DM notes in separately protected documents that ordinary campaign members cannot read.
 - [ ] Add an optional short public story highlight that must be explicitly published and contains no private recap or DM-note fields.
 - [ ] Publish public highlights through separate sanitized documents/routes so anonymous readers never receive the private campaign document.
 - [ ] Add campaign history and RPG attendance statistics without mixing RPG sessions into the competitive board-game leaderboard.
 - [ ] Add Firestore rules and emulator tests for player-owned character edits, DM controls, public recaps, and private notes.
-- [ ] Add E2E coverage for campaign creation, RPG scheduling, character management, and session recaps.
+- [x] Add E2E coverage for campaign creation, RPG scheduling, character management, and session recaps.
 
 ## Phase 4 — Optional rules reference
 

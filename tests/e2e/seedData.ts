@@ -20,6 +20,11 @@ export const E2E_CAMPAIGN = {
   name: 'E2E Davokar Campaign'
 } as const
 
+export const E2E_CHARACTER = {
+  id: 'aric-ironfoot',
+  name: 'Aric Ironfoot'
+} as const
+
 export const E2E_RSVP_EVENTS = {
   public: 'rsvp-public',
   full: 'rsvp-full',
