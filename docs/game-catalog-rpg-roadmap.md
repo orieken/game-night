@@ -54,7 +54,7 @@ Make it easy for a private group to add accurate board-game information to its s
 ## Phase 3 — Characters and adventure logs
 
 - [x] Allow players to manage their own character details; allow DMs to manage campaign membership and archival status.
-- [ ] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
+- [x] Add lightweight character summaries with universal fields: name, player, pronouns, status, portrait URL, external sheet URL, and public notes.
 - [ ] Add optional system-defined character fields for concepts such as class, subclass, level, species/ancestry, attributes, corruption, abilities, or differently named stats without implementing game-rule calculations.
 - [ ] Add character create, edit, retire, and campaign-roster views.
 - [ ] Add campaign session logs linked to their scheduled events.

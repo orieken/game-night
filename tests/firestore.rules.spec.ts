@@ -81,7 +81,7 @@ async function seedEvent(groupId: string, eventId: string, overrides: Record<str
   })
 }
 
-async function seedCampaign(groupId: string, campaignId: string) {
+async function seedCampaign(groupId: string, campaignId: string, overrides: Record<string, unknown> = {}) {
   await testEnvironment.withSecurityRulesDisabled(async (context) => {
     await setDoc(doc(context.firestore(), 'groups', groupId, 'campaigns', campaignId), {
       name: 'The Darkest Star',
@@ -95,7 +95,8 @@ async function seedCampaign(groupId: string, campaignId: string) {
       characterFieldDefinitions: [],
       createdById: 'owner-1',
       createdAt: new Date(),
-      updatedAt: new Date()
+      updatedAt: new Date(),
+      ...overrides
     })
   })
 }
@@ -252,6 +253,50 @@ describe('Firestore security rules', () => {
     }
 
     await assertFails(setDoc(doc(database, 'groups', 'group-1', 'campaigns', 'campaign-1'), campaign))
+  })
+
+  it('lets campaign players manage only their own character summaries', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'player-1', role: 'member' },
+      { id: 'other-1', role: 'member' }
+    ])
+    await seedCampaign('group-1', 'campaign-1', { memberIds: ['owner-1', 'player-1'] })
+
+    const playerDatabase = testEnvironment.authenticatedContext('player-1').firestore()
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const otherDatabase = testEnvironment.authenticatedContext('other-1').firestore()
+    const characterRef = doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1')
+    const character = {
+      name: 'Mira Nightshade',
+      playerId: 'player-1',
+      pronouns: 'she/her',
+      status: 'active',
+      portraitUrl: null,
+      externalSheetUrl: null,
+      publicNotes: 'A witch traveling through Davokar.',
+      createdById: 'player-1',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+
+    await assertSucceeds(setDoc(characterRef, character))
+    await assertSucceeds(getDoc(characterRef))
+    await assertSucceeds(getDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1')))
+    await assertFails(getDoc(doc(otherDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1')))
+    await assertSucceeds(updateDoc(characterRef, { publicNotes: 'Updated by the player.', updatedAt: new Date() }))
+    await assertFails(updateDoc(doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'campaign-1', 'characters', 'character-1'), {
+      publicNotes: 'A DM edit.',
+      updatedAt: new Date()
+    }))
+    await assertFails(updateDoc(characterRef, { playerId: 'other-1', updatedAt: new Date() }))
+    await assertFails(deleteDoc(characterRef))
+
+    await seedCampaign('group-1', 'archived-campaign', {
+      status: 'archived',
+      memberIds: ['owner-1', 'player-1']
+    })
+    await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'archived-campaign', 'characters', 'character-2'), character))
   })
 
   it('requires an organizer to create an event as themselves', async () => {

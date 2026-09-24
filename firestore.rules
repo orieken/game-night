@@ -146,6 +146,48 @@ service cloud.firestore {
           request.resource.data.createdById == resource.data.createdById &&
           request.resource.data.createdAt == resource.data.createdAt;
         allow delete: if false;
+
+        match /characters/{characterId} {
+          function campaignData() {
+            return get(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId)).data;
+          }
+
+          function isCampaignParticipant() {
+            return isMember(groupId) && (
+              request.auth.uid in campaignData().memberIds ||
+              request.auth.uid in campaignData().dmIds
+            );
+          }
+
+          function validCharacter(characterData) {
+            return characterData.name is string &&
+              characterData.name.size() > 0 &&
+              characterData.playerId is string &&
+              (characterData.pronouns == null || characterData.pronouns is string) &&
+              characterData.status in ['active', 'inactive', 'retired', 'deceased'] &&
+              (characterData.portraitUrl == null || characterData.portraitUrl is string) &&
+              (characterData.externalSheetUrl == null || characterData.externalSheetUrl is string) &&
+              (characterData.publicNotes == null || characterData.publicNotes is string) &&
+              characterData.createdById is string &&
+              characterData.createdAt is timestamp &&
+              characterData.updatedAt is timestamp;
+          }
+
+          allow read: if isOrganizer(groupId) || isCampaignParticipant();
+          allow create: if isCampaignParticipant() &&
+            campaignData().status != 'archived' &&
+            validCharacter(request.resource.data) &&
+            request.resource.data.playerId == request.auth.uid &&
+            request.resource.data.createdById == request.auth.uid;
+          allow update: if isCampaignParticipant() &&
+            campaignData().status != 'archived' &&
+            resource.data.playerId == request.auth.uid &&
+            validCharacter(request.resource.data) &&
+            request.resource.data.playerId == resource.data.playerId &&
+            request.resource.data.createdById == resource.data.createdById &&
+            request.resource.data.createdAt == resource.data.createdAt;
+          allow delete: if false;
+        }
       }
 
       match /events/{eventId} {
