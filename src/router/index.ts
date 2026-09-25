@@ -242,7 +242,10 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.requiresGuest && authStore.user) {
-    next('/')
+    const redirect = typeof to.query.redirect === 'string' && to.query.redirect.startsWith('/')
+      ? to.query.redirect
+      : '/'
+    next(redirect)
     return
   }
 

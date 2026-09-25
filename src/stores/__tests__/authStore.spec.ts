@@ -82,6 +82,15 @@ describe('AuthStore', () => {
     expect(groupRepository.ensurePersonalGroup).toHaveBeenCalled()
   })
 
+  it('shows a friendly message when a Google popup is actually closed', async () => {
+    vi.mocked(signInWithPopup).mockRejectedValue(Object.assign(new Error('Firebase: Error (auth/popup-closed-by-user).'), { code: 'auth/popup-closed-by-user' }))
+    const store = useAuthStore()
+
+    await expect(store.loginWithGoogle()).resolves.toBe(false)
+
+    expect(store.error).toBe('Google sign-in was closed before it finished. Please try again.')
+  })
+
   it('always finishes initialization when personal group provisioning fails', async () => {
     vi.mocked(onAuthStateChanged).mockImplementation(((_auth: unknown, callback: (user: unknown) => void) => {
       void callback({ uid: 'user-123' } as never)

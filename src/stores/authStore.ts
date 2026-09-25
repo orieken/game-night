@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile } from 'firebase/auth'
+import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User as FirebaseUser } from 'firebase/auth'
 import { getFirebaseAuth } from '@/infrastructure/api/firebaseClient'
 import { groupRepository } from '@/infrastructure/repositories/groupRepository'
 import { userRepository } from '@/infrastructure/repositories/userRepository'
@@ -93,29 +93,33 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     try {
       const credentials = await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider())
-      const existingProfile = await userRepository.getCurrentUser()
-      if (existingProfile) {
-        user.value = existingProfile
-      } else {
-        user.value = await userRepository.createProfile({
-          id: credentials.user.uid,
-          email: credentials.user.email ?? '',
-          username: createUsername(credentials.user.email, credentials.user.uid),
-          displayName: credentials.user.displayName,
-          avatarUrl: credentials.user.photoURL,
-          bio: null,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-      }
-      await initializeGroups(user.value)
+      await finishGoogleSignIn(credentials.user)
       return true
     } catch (err: unknown) {
-      error.value = getErrorMessage(err, 'Unable to sign in with Google.')
+      error.value = getAuthErrorMessage(err, 'Unable to sign in with Google.')
       return false
     } finally {
       loading.value = false
     }
+  }
+
+  async function finishGoogleSignIn(firebaseUser: FirebaseUser) {
+    const existingProfile = await userRepository.getCurrentUser()
+    if (existingProfile) {
+      user.value = existingProfile
+    } else {
+      user.value = await userRepository.createProfile({
+        id: firebaseUser.uid,
+        email: firebaseUser.email ?? '',
+        username: createUsername(firebaseUser.email, firebaseUser.uid),
+        displayName: firebaseUser.displayName,
+        avatarUrl: firebaseUser.photoURL,
+        bio: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+    }
+    await initializeGroups(user.value)
   }
 
   async function register(email: string, password: string, username: string) {
@@ -192,6 +196,14 @@ export const useAuthStore = defineStore('auth', () => {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback
+}
+
+function getAuthErrorMessage(error: unknown, fallback: string): string {
+  const code = typeof error === 'object' && error && 'code' in error ? String(error.code) : ''
+  if (code === 'auth/popup-closed-by-user') return 'Google sign-in was closed before it finished. Please try again.'
+  if (code === 'auth/popup-blocked') return 'Your browser blocked the Google sign-in window. Allow popups or try again.'
+  if (code === 'auth/unauthorized-domain') return 'Google sign-in is not authorized for this website yet.'
+  return getErrorMessage(error, fallback)
 }
 
 function createUsername(email: string | null, userId: string): string {

@@ -13,7 +13,8 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Cross-Origin-Opener-Policy = "same-origin"
+    # OAuth popups must retain their opener so Firebase can receive the result.
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Content-Type-Options = "nosniff"
