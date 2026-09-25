@@ -1,7 +1,7 @@
 import { deleteApp, initializeApp } from 'firebase/app'
 import { connectAuthEmulator, createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { connectFirestoreEmulator, doc, getFirestore, serverTimestamp, setDoc, Timestamp, writeBatch } from 'firebase/firestore'
-import { E2E_CAMPAIGN, E2E_CHARACTER, E2E_GAME, E2E_GUEST, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
+import { E2E_CAMPAIGN, E2E_CHARACTER, E2E_GAME, E2E_GUEST, E2E_HEROQUEST_GAME, E2E_RSVP_EVENTS, E2E_USER } from './seedData'
 
 const projectId = 'demo-game-night'
 
@@ -90,6 +90,22 @@ export default async function globalSetup() {
     category: ['Abstract'],
     imageUrl: null,
     bggId: null,
+    isAvailable: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  })
+
+  await setDoc(doc(groupRef, 'games', E2E_HEROQUEST_GAME.id), {
+    name: E2E_HEROQUEST_GAME.name,
+    description: 'A deterministic campaign board game for local browser tests.',
+    minPlayers: 2,
+    maxPlayers: 5,
+    avgDuration: 90,
+    complexity: 'medium',
+    category: ['Dungeon crawler', 'Campaign'],
+    imageUrl: null,
+    bggId: null,
+    catalogData: null,
     isAvailable: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()

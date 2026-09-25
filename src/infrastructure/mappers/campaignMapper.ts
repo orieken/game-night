@@ -1,7 +1,9 @@
 import type { Campaign } from '@/domain/entities/Campaign'
 import type { Timestamp } from 'firebase/firestore'
 
-export interface CampaignDocument extends Omit<Campaign, 'id' | 'createdAt' | 'updatedAt'> {
+export interface CampaignDocument extends Omit<Campaign, 'id' | 'kind' | 'gameId' | 'createdAt' | 'updatedAt'> {
+  kind?: Campaign['kind']
+  gameId?: string | null
   createdAt: Timestamp
   updatedAt: Timestamp
 }
@@ -9,6 +11,8 @@ export interface CampaignDocument extends Omit<Campaign, 'id' | 'createdAt' | 'u
 export function toCampaign(id: string, row: CampaignDocument): Campaign {
   return {
     id,
+    kind: row.kind ?? 'tabletop_rpg',
+    gameId: row.gameId ?? null,
     name: row.name,
     description: row.description,
     system: row.system,

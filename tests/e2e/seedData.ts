@@ -15,6 +15,11 @@ export const E2E_GAME = {
   name: 'Azul'
 } as const
 
+export const E2E_HEROQUEST_GAME = {
+  id: 'heroquest',
+  name: 'HeroQuest'
+} as const
+
 export const E2E_CAMPAIGN = {
   id: 'davokar-campaign',
   name: 'E2E Davokar Campaign'

@@ -1,4 +1,5 @@
 export type CampaignStatus = 'active' | 'on_hold' | 'completed' | 'archived'
+export type CampaignKind = 'tabletop_rpg' | 'campaign_board_game'
 export type CampaignCharacterFieldType = 'text' | 'long_text' | 'number' | 'boolean' | 'select'
 
 export interface CampaignExternalLink {
@@ -16,6 +17,8 @@ export interface CampaignCharacterFieldDefinition {
 
 export interface Campaign {
   id: string
+  kind: CampaignKind
+  gameId: string | null
   name: string
   description: string | null
   system: string

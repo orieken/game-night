@@ -1,7 +1,9 @@
 import type { Character, CharacterFieldValue } from '@/domain/entities/Character'
 import type { Timestamp } from 'firebase/firestore'
 
-export interface CharacterDocument extends Omit<Character, 'id' | 'campaignId' | 'allowCopying' | 'fieldValues' | 'createdAt' | 'updatedAt'> {
+export interface CharacterDocument extends Omit<Character, 'id' | 'campaignId' | 'ownershipType' | 'controllerId' | 'allowCopying' | 'fieldValues' | 'createdAt' | 'updatedAt'> {
+  ownershipType?: Character['ownershipType']
+  controllerId?: string | null
   allowCopying?: boolean
   fieldValues?: Record<string, CharacterFieldValue>
   createdAt: Timestamp
@@ -13,7 +15,9 @@ export function toCharacter(campaignId: string, id: string, row: CharacterDocume
     id,
     campaignId,
     name: row.name,
+    ownershipType: row.ownershipType ?? 'player',
     playerId: row.playerId,
+    controllerId: row.controllerId ?? row.playerId,
     pronouns: row.pronouns,
     status: row.status,
     portraitUrl: row.portraitUrl,

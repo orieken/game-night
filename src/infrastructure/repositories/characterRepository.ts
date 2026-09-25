@@ -22,7 +22,9 @@ export const characterRepository: ICharacterRepository = {
   async create(groupId, campaignId, character): Promise<Character> {
     const snapshot = await addDoc(charactersCollection(groupId, campaignId), {
       name: character.name,
+      ownershipType: character.ownershipType,
       playerId: character.playerId,
+      controllerId: character.controllerId,
       pronouns: character.pronouns,
       status: character.status,
       portraitUrl: character.portraitUrl,
@@ -41,6 +43,7 @@ export const characterRepository: ICharacterRepository = {
   async update(groupId, campaignId, id, character): Promise<Character> {
     const updates = Object.fromEntries(Object.entries({
       name: character.name,
+      controllerId: character.controllerId,
       pronouns: character.pronouns,
       status: character.status,
       portraitUrl: character.portraitUrl,

@@ -12,6 +12,7 @@ Make it easy for a private group to add accurate board-game information to its s
 - Continue supporting manual game entry when a catalog match is unavailable.
 - Keep board games and tabletop RPG nights in the same app because they share groups, scheduling, invitations, RSVPs, attendance, and history.
 - Model board-game, tabletop RPG, and mixed events explicitly.
+- Treat progression-driven board games as campaigns without pretending they use tabletop-RPG ownership rules.
 - Support D&D 5e, 5e-derived settings, and Symbaroum without coupling campaign storage to one rules engine, edition, or publisher.
 - Start with lightweight, system-flexible campaigns, player-managed character summaries, and adventure logs rather than building a complete D&D character manager.
 - Make full recaps visible to campaign players and reserve an optional, deliberately published public story highlight for a later release.
@@ -76,6 +77,15 @@ Make it easy for a private group to add accurate board-game information to its s
 - [x] Choose Open5e V2 with an SRD-only source allowlist based on the editions and systems the group actually uses.
 - [x] Add opt-in spell, creature, equipment, and rules lookup without copying unsupported commercial content.
 - [x] Keep campaign and character features functional if the reference API is unavailable.
+
+## Phase 5 — Campaign board games
+
+- [x] Distinguish tabletop RPG campaigns from campaign board games while defaulting older campaigns to tabletop RPGs.
+- [x] Allow campaign board games to link to a title in the shared game library and to board-game or mixed events.
+- [x] Add a HeroQuest preset for hero type, Body Points, Mind Points, gold, equipment, artifacts, spells, and completed quests.
+- [x] Support table-owned heroes with an optional current controller who can update progression without reassigning the hero.
+- [x] Keep player-owned characters available for players who want a permanently personal hero.
+- [x] Add Firestore authorization tests and an end-to-end HeroQuest campaign and shared-hero workflow.
 
 ## BoardGameGeek API registration description
 

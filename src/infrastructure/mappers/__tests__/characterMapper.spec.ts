@@ -24,6 +24,8 @@ describe('characterMapper', () => {
       id: 'character-1',
       campaignId: 'campaign-1',
       ...document,
+      ownershipType: 'player',
+      controllerId: 'player-1',
       allowCopying: false,
       createdAt: date,
       updatedAt: date
@@ -48,5 +50,6 @@ describe('characterMapper', () => {
 
     expect(toCharacter('campaign-1', 'character-1', document).fieldValues).toEqual({})
     expect(toCharacter('campaign-1', 'character-1', document).allowCopying).toBe(false)
+    expect(toCharacter('campaign-1', 'character-1', document)).toMatchObject({ ownershipType: 'player', controllerId: 'player-1' })
   })
 })

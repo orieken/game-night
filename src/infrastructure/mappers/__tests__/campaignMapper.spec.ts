@@ -7,6 +7,8 @@ describe('campaignMapper', () => {
     const date = new Date('2026-09-23T18:00:00.000Z')
     const timestamp = { toDate: () => date } as Timestamp
     const document: CampaignDocument = {
+      kind: 'campaign_board_game',
+      gameId: 'heroquest',
       name: 'The Darkest Star',
       description: 'A family Symbaroum campaign.',
       system: 'Symbaroum',
@@ -33,5 +35,16 @@ describe('campaignMapper', () => {
       createdAt: date,
       updatedAt: date
     })
+  })
+
+  it('defaults older campaign documents to tabletop RPGs without a linked game', () => {
+    const timestamp = { toDate: () => new Date('2026-09-23T18:00:00.000Z') } as Timestamp
+    const document = {
+      name: 'Legacy campaign', description: null, system: 'D&D 5e', variant: null, status: 'active' as const,
+      dmIds: ['dm-1'], memberIds: ['dm-1'], externalLinks: [], characterFieldDefinitions: [],
+      createdById: 'dm-1', createdAt: timestamp, updatedAt: timestamp
+    } satisfies CampaignDocument
+
+    expect(toCampaign('legacy', document)).toMatchObject({ kind: 'tabletop_rpg', gameId: null })
   })
 })

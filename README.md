@@ -12,6 +12,7 @@ A private, non-commercial app for friends and family to organize board-game nigh
 - Shareable invitations, RSVPs, capacity limits, and attendance
 - Completed play sessions, results, history, and a board-game leaderboard
 - System-flexible campaigns for D&D 5e, 5e-derived settings, original Symbaroum, and Ruins of Symbaroum
+- Campaign-board-game support with linked library games, a HeroQuest character preset, and reassignable table-owned heroes
 - Player-managed campaign characters and a reusable character vault
 - Adventure logs, separately protected DM notes, campaign attendance statistics, and optional public story highlights
 - Optional 2014/2024 SRD lookup for spells, creatures, equipment, and rules

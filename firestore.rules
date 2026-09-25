@@ -221,6 +221,12 @@ service cloud.firestore {
 
         function validCampaignShape(campaignData) {
           return validCampaign(campaignData) &&
+            campaignData.get('kind', 'tabletop_rpg') in ['tabletop_rpg', 'campaign_board_game'] &&
+            (campaignData.get('gameId', null) == null || (
+              campaignData.get('kind', 'tabletop_rpg') == 'campaign_board_game' &&
+              campaignData.gameId is string &&
+              exists(/databases/$(database)/documents/groups/$(groupId)/games/$(campaignData.gameId))
+            )) &&
             campaignData.system is string &&
             campaignData.system.size() > 0 &&
             (campaignData.variant == null || campaignData.variant is string) &&
@@ -237,7 +243,8 @@ service cloud.firestore {
 
         function isCampaignManager() {
           return isOrganizer(groupId) ||
-            (isMember(groupId) && request.auth.uid in resource.data.dmIds);
+            (isMember(groupId) &&
+              request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId)).data.dmIds);
         }
 
         allow read: if isMember(groupId);
@@ -265,9 +272,17 @@ service cloud.firestore {
           }
 
           function validCharacter(characterData) {
+            let ownershipType = characterData.get('ownershipType', 'player');
+            let controllerId = characterData.get('controllerId', characterData.playerId);
             return characterData.name is string &&
               characterData.name.size() > 0 &&
-              characterData.playerId is string &&
+              ownershipType in ['player', 'table'] &&
+              ((ownershipType == 'player' &&
+                characterData.playerId is string &&
+                controllerId == characterData.playerId) ||
+               (ownershipType == 'table' &&
+                characterData.playerId == null &&
+                (controllerId == null || controllerId in campaignData().memberIds))) &&
               (characterData.pronouns == null || characterData.pronouns is string) &&
               characterData.status in ['active', 'inactive', 'retired', 'deceased'] &&
               (characterData.portraitUrl == null || characterData.portraitUrl is string) &&
@@ -282,18 +297,30 @@ service cloud.firestore {
           }
 
           allow read: if isOrganizer(groupId) || isCampaignParticipant();
-          allow create: if isCampaignParticipant() &&
-            campaignData().status != 'archived' &&
+          allow create: if campaignData().status != 'archived' &&
             validCharacter(request.resource.data) &&
-            request.resource.data.playerId == request.auth.uid &&
-            request.resource.data.createdById == request.auth.uid;
-          allow update: if isCampaignParticipant() &&
-            campaignData().status != 'archived' &&
-            resource.data.playerId == request.auth.uid &&
+            request.resource.data.createdById == request.auth.uid &&
+            ((isCampaignParticipant() &&
+              request.resource.data.get('ownershipType', 'player') == 'player' &&
+              request.resource.data.playerId == request.auth.uid) ||
+             (request.resource.data.get('ownershipType', 'player') == 'table' && isCampaignManager()));
+          allow update: if campaignData().status != 'archived' &&
             validCharacter(request.resource.data) &&
+            request.resource.data.get('ownershipType', 'player') == resource.data.get('ownershipType', 'player') &&
             request.resource.data.playerId == resource.data.playerId &&
             request.resource.data.createdById == resource.data.createdById &&
-            request.resource.data.createdAt == resource.data.createdAt;
+            request.resource.data.createdAt == resource.data.createdAt &&
+            ((isCampaignParticipant() &&
+              resource.data.get('ownershipType', 'player') == 'player' &&
+              resource.data.playerId == request.auth.uid) ||
+             (resource.data.get('ownershipType', 'player') == 'table' && (
+               isCampaignManager() || (
+                 isCampaignParticipant() &&
+                 resource.data.get('controllerId', null) == request.auth.uid &&
+                 request.resource.data.get('controllerId', null) == resource.data.get('controllerId', null) &&
+                 request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fieldValues', 'publicNotes', 'updatedAt'])
+               )
+             )));
           allow delete: if false;
         }
 
@@ -319,7 +346,10 @@ service cloud.firestore {
             return eventId is string &&
               exists(eventPath) &&
               get(eventPath).data.get('campaignId', null) == campaignId &&
-              get(eventPath).data.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed'];
+              ((logCampaignData().get('kind', 'tabletop_rpg') == 'campaign_board_game' &&
+                get(eventPath).data.get('eventType', 'board_game') in ['board_game', 'mixed']) ||
+               (logCampaignData().get('kind', 'tabletop_rpg') == 'tabletop_rpg' &&
+                get(eventPath).data.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed']));
           }
 
           function validAdventureLog(logData) {
@@ -414,10 +444,14 @@ service cloud.firestore {
 
         function validCampaignLink(eventData) {
           let campaignId = eventData.get('campaignId', null);
+          let campaignPath = /databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId);
           return campaignId == null || (
             campaignId is string &&
-            eventData.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed'] &&
-            exists(/databases/$(database)/documents/groups/$(groupId)/campaigns/$(campaignId))
+            exists(campaignPath) &&
+            ((get(campaignPath).data.get('kind', 'tabletop_rpg') == 'campaign_board_game' &&
+              eventData.get('eventType', 'board_game') in ['board_game', 'mixed']) ||
+             (get(campaignPath).data.get('kind', 'tabletop_rpg') == 'tabletop_rpg' &&
+              eventData.get('eventType', 'board_game') in ['tabletop_rpg', 'mixed']))
           );
         }
 

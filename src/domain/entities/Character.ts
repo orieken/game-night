@@ -1,11 +1,14 @@
 export type CharacterStatus = 'active' | 'inactive' | 'retired' | 'deceased'
+export type CharacterOwnership = 'player' | 'table'
 export type CharacterFieldValue = string | number | boolean | null
 
 export interface Character {
   id: string
   campaignId: string
   name: string
-  playerId: string
+  ownershipType: CharacterOwnership
+  playerId: string | null
+  controllerId: string | null
   pronouns: string | null
   status: CharacterStatus
   portraitUrl: string | null

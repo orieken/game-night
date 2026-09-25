@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import type { Campaign, CampaignCharacterFieldType, CampaignStatus } from '@/domain/entities/Campaign'
+import type { Campaign, CampaignCharacterFieldType, CampaignKind, CampaignStatus } from '@/domain/entities/Campaign'
+import { createHeroQuestCharacterFields } from '@/domain/campaignPresets'
 import { useAuthStore } from '@/stores/authStore'
 import { useCampaignStore } from '@/stores/campaignStore'
 import { useGroupStore } from '@/stores/groupStore'
+import { useGameStore } from '@/stores/gameStore'
 import { useToastStore } from '@/stores/toastStore'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
@@ -25,6 +27,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const campaignStore = useCampaignStore()
 const groupStore = useGroupStore()
+const gameStore = useGameStore()
 const toastStore = useToastStore()
 const ready = ref(false)
 const validationError = ref<string | null>(null)
@@ -37,6 +40,8 @@ const canManage = computed(() => isOrganizer.value || Boolean(
 ))
 
 const form = reactive({
+  kind: 'tabletop_rpg' as CampaignKind,
+  gameId: '',
   name: '',
   description: '',
   system: '',
@@ -53,7 +58,7 @@ async function initialize() {
   validationError.value = null
   const groupId = groupStore.activeGroupId
   if (!groupId) return
-  await groupStore.fetchMembers(groupId)
+  await Promise.all([groupStore.fetchMembers(groupId), gameStore.fetchGames(groupId)])
   if (campaignId.value) {
     await campaignStore.fetchCampaignById(groupId, campaignId.value)
     if (campaignStore.currentCampaign) populateForm(campaignStore.currentCampaign)
@@ -65,6 +70,8 @@ async function initialize() {
 
 function resetForm() {
   const userId = authStore.user?.id
+  form.kind = 'tabletop_rpg'
+  form.gameId = ''
   form.name = ''
   form.description = ''
   form.system = ''
@@ -77,6 +84,8 @@ function resetForm() {
 }
 
 function populateForm(campaign: Campaign) {
+  form.kind = campaign.kind
+  form.gameId = campaign.gameId ?? ''
   form.name = campaign.name
   form.description = campaign.description ?? ''
   form.system = campaign.system
@@ -97,6 +106,13 @@ function addExternalLink() {
 
 function addCharacterField() {
   form.characterFields.push({ id: '', label: '', type: 'text', required: false, options: '' })
+}
+
+function applyHeroQuestPreset() {
+  form.kind = 'campaign_board_game'
+  form.system = 'HeroQuest'
+  form.gameId = gameStore.games.find((game) => game.name.trim().toLowerCase() === 'heroquest')?.id ?? form.gameId
+  form.characterFields = createHeroQuestCharacterFields().map((field) => ({ ...field, options: field.options.join(', ') }))
 }
 
 function fieldId(label: string, index: number) {
@@ -120,6 +136,8 @@ async function submit() {
   const dmIds = [...new Set(form.dmIds)]
   const memberIds = [...new Set([...form.memberIds, ...dmIds])]
   const data = {
+    kind: form.kind,
+    gameId: form.kind === 'campaign_board_game' ? form.gameId || null : null,
     name: form.name.trim(),
     description: form.description.trim() || null,
     system: form.system.trim(),
@@ -168,14 +186,35 @@ watch([() => groupStore.activeGroupId, campaignId], () => void initialize(), { i
         <div v-if="validationError" class="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200" role="alert">{{ validationError }}</div>
         <section class="space-y-5" aria-labelledby="campaign-basics-heading">
           <h2 id="campaign-basics-heading" class="text-lg font-bold text-white">Campaign basics</h2>
+          <fieldset>
+            <legend class="app-label">Campaign type</legend>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <label class="cursor-pointer rounded-xl border p-4 transition" :class="form.kind === 'tabletop_rpg' ? 'border-[#57d2a4]/70 bg-[#57d2a4]/10' : 'border-white/10 bg-white/[0.02]'">
+                <input v-model="form.kind" class="sr-only" type="radio" name="campaign-kind" value="tabletop_rpg">
+                <strong class="block text-white">Tabletop RPG</strong><span class="mt-1 block text-xs text-slate-400">D&amp;D, Symbaroum, and other roleplaying systems.</span>
+              </label>
+              <label class="cursor-pointer rounded-xl border p-4 transition" :class="form.kind === 'campaign_board_game' ? 'border-[#57d2a4]/70 bg-[#57d2a4]/10' : 'border-white/10 bg-white/[0.02]'">
+                <input v-model="form.kind" class="sr-only" type="radio" name="campaign-kind" value="campaign_board_game">
+                <strong class="block text-white">Campaign board game</strong><span class="mt-1 block text-xs text-slate-400">HeroQuest and other games with heroes that progress.</span>
+              </label>
+            </div>
+          </fieldset>
+          <div v-if="form.kind === 'campaign_board_game'" class="rounded-xl border border-[#8b5cf6]/25 bg-[#8b5cf6]/10 p-4">
+            <div class="flex flex-col justify-between gap-3 sm:flex-row sm:items-center"><div><p class="font-semibold text-white">Starting a HeroQuest campaign?</p><p class="mt-1 text-xs leading-5 text-slate-300">Load fields for Body Points, Mind Points, gold, gear, spells, and completed quests.</p></div><AppButton type="button" variant="secondary" @click="applyHeroQuestPreset">Use HeroQuest preset</AppButton></div>
+          </div>
           <AppInput id="campaign-name" v-model="form.name" label="Campaign name" placeholder="The Darkest Star" required />
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <label for="campaign-system" class="app-label">Game system</label>
-              <input id="campaign-system" v-model="form.system" list="campaign-system-options" class="app-field" placeholder="D&D 5e or Symbaroum" required>
-              <datalist id="campaign-system-options"><option value="D&D 5e" /><option value="Symbaroum" /><option value="Ruins of Symbaroum" /><option value="Adventure Time 5e" /><option value="Stranger Things 5e" /></datalist>
+              <input id="campaign-system" v-model="form.system" list="campaign-system-options" class="app-field" placeholder="D&D 5e, Symbaroum, or HeroQuest" required>
+              <datalist id="campaign-system-options"><option value="D&D 5e" /><option value="Symbaroum" /><option value="Ruins of Symbaroum" /><option value="Adventure Time 5e" /><option value="Stranger Things 5e" /><option value="HeroQuest" /></datalist>
             </div>
             <AppInput id="campaign-variant" v-model="form.variant" label="Variant or edition" placeholder="Optional house rules or edition" />
+          </div>
+          <div v-if="form.kind === 'campaign_board_game'">
+            <label for="campaign-game" class="app-label">Linked library game</label>
+            <select id="campaign-game" v-model="form.gameId" class="app-field"><option value="">No linked game</option><option v-for="game in gameStore.games" :key="game.id" :value="game.id">{{ game.name }}</option></select>
+            <p class="mt-2 text-xs text-slate-400">Link the campaign to a game already in your table library.</p>
           </div>
           <div>
             <label for="campaign-description" class="app-label">Description</label>
@@ -188,11 +227,11 @@ watch([() => groupStore.activeGroupId, campaignId], () => void initialize(), { i
         </section>
 
         <section class="border-t border-white/10 pt-7" aria-labelledby="campaign-people-heading">
-          <h2 id="campaign-people-heading" class="text-lg font-bold text-white">DMs and players</h2>
-          <p class="mt-1 text-sm text-slate-400">DMs can edit and archive this campaign. Every DM is also included as a campaign member.</p>
+          <h2 id="campaign-people-heading" class="text-lg font-bold text-white">{{ form.kind === 'campaign_board_game' ? 'Managers and players' : 'DMs and players' }}</h2>
+          <p class="mt-1 text-sm text-slate-400">{{ form.kind === 'campaign_board_game' ? 'Campaign managers can maintain the campaign and its table-owned heroes.' : 'DMs can edit and archive this campaign. Every DM is also included as a campaign member.' }}</p>
           <div class="mt-5 grid gap-6 sm:grid-cols-2">
             <fieldset>
-              <legend class="app-label">Dungeon masters</legend>
+              <legend class="app-label">{{ form.kind === 'campaign_board_game' ? 'Campaign managers' : 'Dungeon masters' }}</legend>
               <div class="space-y-2">
                 <label v-for="member in groupStore.members" :key="`dm-${member.userId}`" class="flex min-h-11 items-center gap-3 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-200"><input v-model="form.dmIds" type="checkbox" :value="member.userId" class="h-5 w-5 rounded border-white/20 bg-[#10131a] text-[#8b5cf6]"><span>{{ member.displayName }}</span></label>
               </div>

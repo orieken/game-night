@@ -27,8 +27,14 @@ const campaignId = computed(() => typeof route.params.campaignId === 'string' ? 
 const characterId = computed(() => typeof route.params.characterId === 'string' ? route.params.characterId : null)
 const campaign = computed(() => campaignStore.currentCampaign)
 const character = computed(() => characterStore.currentCharacter)
-const isOwner = computed(() => character.value?.playerId === authStore.user?.id)
-const playerName = computed(() => groupStore.members.find((member) => member.userId === character.value?.playerId)?.displayName ?? 'Campaign player')
+const isPlayerOwner = computed(() => character.value?.ownershipType === 'player' && character.value.playerId === authStore.user?.id)
+const memberRole = computed(() => groupStore.members.find((member) => member.userId === authStore.user?.id)?.role)
+const isManager = computed(() => memberRole.value === 'owner' || memberRole.value === 'organizer' || Boolean(campaign.value?.dmIds.includes(authStore.user?.id ?? '')))
+const isController = computed(() => character.value?.ownershipType === 'table' && character.value.controllerId === authStore.user?.id)
+const canManageCharacter = computed(() => isPlayerOwner.value || isController.value || (character.value?.ownershipType === 'table' && isManager.value))
+const canRetireCharacter = computed(() => isPlayerOwner.value || (character.value?.ownershipType === 'table' && isManager.value))
+const playerName = computed(() => groupStore.members.find((member) => member.userId === (character.value?.ownershipType === 'table' ? character.value.controllerId : character.value?.playerId))?.displayName ?? (character.value?.ownershipType === 'table' ? 'Unassigned' : 'Campaign player'))
+const characterAttribution = computed(() => character.value?.ownershipType === 'table' ? `Table-owned hero · Controlled by ${playerName.value}` : `Played by ${playerName.value}`)
 const initials = computed(() => character.value?.name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase() ?? '?')
 
 function displayValue(value: CharacterFieldValue | undefined) {
@@ -49,7 +55,7 @@ async function loadCharacter() {
 }
 
 async function retireCharacter() {
-  if (!groupStore.activeGroupId || !campaignId.value || !character.value || !isOwner.value) return
+  if (!groupStore.activeGroupId || !campaignId.value || !character.value || !canRetireCharacter.value) return
   const retired = await characterStore.retireCharacter(groupStore.activeGroupId, campaignId.value, character.value.id)
   confirmingRetirement.value = false
   if (retired) toastStore.show('Character retired.', 'success')
@@ -57,7 +63,7 @@ async function retireCharacter() {
 }
 
 async function copyToVault() {
-  if (!groupStore.activeGroupId || !authStore.user?.id || !character.value || !campaign.value || isOwner.value || !character.value.allowCopying) return
+  if (!groupStore.activeGroupId || !authStore.user?.id || !character.value || !campaign.value || canManageCharacter.value || !character.value.allowCopying) return
   const copied = await vaultStore.copyCampaignCharacter(groupStore.activeGroupId, character.value, campaign.value, authStore.user.id)
   if (!copied) { toastStore.show(vaultStore.error ?? 'Unable to copy the character.', 'error'); return }
   toastStore.show('Character copied to your private vault.', 'success')
@@ -72,8 +78,8 @@ watch([() => groupStore.activeGroupId, campaignId, characterId], () => void load
     <LoadingState v-if="(campaignStore.loading || characterStore.loading) && !character" label="Loading character sheet…" />
     <ErrorState v-else-if="campaignStore.error || characterStore.error && !character" :message="campaignStore.error ?? characterStore.error ?? 'Unable to load the character.'" @retry="loadCharacter" />
     <template v-else-if="campaign && character">
-      <PageHeader :eyebrow="`${campaign.system} · ${character.status}`" :title="character.name" :description="`Played by ${playerName}${character.pronouns ? ` · ${character.pronouns}` : ''}`">
-        <template #actions><AppButton variant="secondary" @click="router.push(`/campaigns/${campaign.id}`)">Back to campaign</AppButton><AppButton v-if="isOwner" @click="router.push(`/campaigns/${campaign.id}/characters/${character.id}/edit`)">Edit character</AppButton><AppButton v-else-if="character.allowCopying" :loading="vaultStore.loading" @click="copyToVault">Copy to my vault</AppButton></template>
+      <PageHeader :eyebrow="`${campaign.system} · ${character.status}`" :title="character.name" :description="`${characterAttribution}${character.pronouns ? ` · ${character.pronouns}` : ''}`">
+        <template #actions><AppButton variant="secondary" @click="router.push(`/campaigns/${campaign.id}`)">Back to campaign</AppButton><AppButton v-if="canManageCharacter" @click="router.push(`/campaigns/${campaign.id}/characters/${character.id}/edit`)">Edit character</AppButton><AppButton v-else-if="character.allowCopying" :loading="vaultStore.loading" @click="copyToVault">Copy to my vault</AppButton></template>
       </PageHeader>
       <ErrorState v-if="characterStore.error" class="mb-6" :message="characterStore.error" :retryable="false" />
       <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
@@ -96,7 +102,7 @@ watch([() => groupStore.activeGroupId, campaignId, characterId], () => void load
               <div v-for="field in campaign.characterFieldDefinitions" :key="field.id" class="rounded-xl border border-white/10 bg-white/[0.03] p-4"><dt class="text-xs font-semibold uppercase tracking-wider text-slate-400">{{ field.label }}</dt><dd class="mt-2 whitespace-pre-wrap font-medium text-white">{{ displayValue(character.fieldValues[field.id]) }}</dd></div>
             </dl>
           </section>
-          <section v-if="isOwner && character.status !== 'retired' && campaign.status !== 'archived'" class="rounded-2xl border border-red-500/15 bg-red-500/5 p-6">
+          <section v-if="canRetireCharacter && character.status !== 'retired' && campaign.status !== 'archived'" class="rounded-2xl border border-red-500/15 bg-red-500/5 p-6">
             <template v-if="!confirmingRetirement"><h2 class="font-bold text-white">Retire character</h2><p class="mt-2 text-sm text-slate-400">Keep this sheet in the campaign history without deleting it.</p><AppButton class="mt-4" variant="danger" @click="confirmingRetirement = true">Retire character</AppButton></template>
             <template v-else><h2 class="font-bold text-red-100">Retire {{ character.name }}?</h2><div class="mt-4 flex gap-3"><AppButton variant="danger" :loading="characterStore.loading" @click="retireCharacter">Yes, retire</AppButton><AppButton variant="secondary" @click="confirmingRetirement = false">Keep active</AppButton></div></template>
           </section>

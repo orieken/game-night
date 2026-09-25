@@ -22,6 +22,8 @@ export const campaignRepository: ICampaignRepository = {
 
   async create(groupId, campaign): Promise<Campaign> {
     const snapshot = await addDoc(campaignsCollection(groupId), {
+      kind: campaign.kind,
+      gameId: campaign.gameId,
       name: campaign.name,
       description: campaign.description,
       system: campaign.system,
@@ -41,6 +43,8 @@ export const campaignRepository: ICampaignRepository = {
 
   async update(groupId, id, campaign): Promise<Campaign> {
     const updates = Object.fromEntries(Object.entries({
+      kind: campaign.kind,
+      gameId: campaign.gameId,
       name: campaign.name,
       description: campaign.description,
       system: campaign.system,

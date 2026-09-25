@@ -17,7 +17,7 @@ const initials = computed(() => props.character.name.split(/\s+/).map((part) => 
     <span v-else class="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-[#8b5cf6]/15 font-bold text-[#c4b5fd]" aria-hidden="true">{{ initials }}</span>
     <span class="min-w-0 flex-1">
       <span class="flex items-start justify-between gap-3"><strong class="truncate text-white">{{ character.name }}</strong><span class="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{{ character.status }}</span></span>
-      <span class="mt-1 block text-xs text-slate-400">Played by {{ playerName }}<template v-if="character.pronouns"> · {{ character.pronouns }}</template></span>
+      <span class="mt-1 block text-xs text-slate-400">{{ character.ownershipType === 'table' ? `Table hero · Controlled by ${playerName}` : `Played by ${playerName}` }}<template v-if="character.pronouns"> · {{ character.pronouns }}</template></span>
       <span v-if="character.publicNotes" class="mt-2 line-clamp-1 block text-sm text-slate-300">{{ character.publicNotes }}</span>
     </span>
   </RouterLink>

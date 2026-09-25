@@ -42,7 +42,7 @@ watch(() => groupStore.activeGroupId, loadCampaigns, { immediate: true })
 
 <template>
   <div>
-    <PageHeader title="Campaigns" :description="`Tabletop RPG campaigns for ${groupStore.activeGroup?.name ?? 'your table'}.`">
+    <PageHeader title="Campaigns" :description="`Tabletop RPG and campaign board-game adventures for ${groupStore.activeGroup?.name ?? 'your table'}.`">
       <template #actions><AppButton v-if="canCreate" @click="$router.push('/campaigns/new')">Create campaign</AppButton></template>
     </PageHeader>
 

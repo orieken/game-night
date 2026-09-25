@@ -337,6 +337,44 @@ describe('Firestore security rules', () => {
     await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'archived-campaign', 'characters', 'character-2'), character))
   })
 
+  it('lets campaign managers assign table-owned heroes while controllers update progression only', async () => {
+    await seedGroup('group-1', 'owner-1', [
+      { id: 'owner-1', role: 'owner' },
+      { id: 'player-1', role: 'member' },
+      { id: 'other-1', role: 'member' }
+    ])
+    await seedCampaign('group-1', 'heroquest-campaign', {
+      kind: 'campaign_board_game',
+      gameId: null,
+      system: 'HeroQuest',
+      memberIds: ['owner-1', 'player-1']
+    })
+
+    const ownerDatabase = testEnvironment.authenticatedContext('owner-1').firestore()
+    const playerDatabase = testEnvironment.authenticatedContext('player-1').firestore()
+    const otherDatabase = testEnvironment.authenticatedContext('other-1').firestore()
+    const ownerRef = doc(ownerDatabase, 'groups', 'group-1', 'campaigns', 'heroquest-campaign', 'characters', 'barbarian')
+    const playerRef = doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'heroquest-campaign', 'characters', 'barbarian')
+    const hero = {
+      name: 'The Barbarian', ownershipType: 'table', playerId: null, controllerId: 'player-1',
+      pronouns: null, status: 'active', portraitUrl: null, externalSheetUrl: null,
+      publicNotes: null, allowCopying: false, fieldValues: { 'body-points-current': 8 },
+      createdById: 'owner-1', createdAt: new Date(), updatedAt: new Date()
+    }
+
+    await assertSucceeds(setDoc(ownerRef, hero))
+    await assertSucceeds(updateDoc(playerRef, { fieldValues: { 'body-points-current': 6 }, updatedAt: new Date() }))
+    await assertSucceeds(updateDoc(playerRef, { publicNotes: 'Found the Spirit Blade.', updatedAt: new Date() }))
+    await assertFails(updateDoc(playerRef, { controllerId: 'owner-1', updatedAt: new Date() }))
+    await assertFails(updateDoc(playerRef, { name: 'Renamed by controller', updatedAt: new Date() }))
+    await assertFails(updateDoc(playerRef, { status: 'retired', updatedAt: new Date() }))
+    await assertFails(updateDoc(doc(otherDatabase, ownerRef.path), { fieldValues: {}, updatedAt: new Date() }))
+    await assertSucceeds(updateDoc(ownerRef, { controllerId: 'owner-1', updatedAt: new Date() }))
+    await assertFails(setDoc(doc(playerDatabase, 'groups', 'group-1', 'campaigns', 'heroquest-campaign', 'characters', 'wizard'), {
+      ...hero, name: 'The Wizard', createdById: 'player-1'
+    }))
+  })
+
   it('lets campaign managers maintain group-visible adventure logs linked to RPG events', async () => {
     await seedGroup('group-1', 'owner-1', [
       { id: 'owner-1', role: 'owner' },
@@ -444,6 +482,7 @@ describe('Firestore security rules', () => {
       { id: 'organizer-2', role: 'organizer' }
     ])
     await seedCampaign('group-1', 'campaign-1')
+    await seedCampaign('group-1', 'heroquest-campaign', { kind: 'campaign_board_game', gameId: null, system: 'HeroQuest' })
 
     const organizerDatabase = testEnvironment.authenticatedContext('organizer-1').firestore()
     const eventRef = doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-1')
@@ -469,6 +508,16 @@ describe('Firestore security rules', () => {
       ...event,
       eventType: 'board_game',
       campaignId: 'campaign-1'
+    }))
+    await assertSucceeds(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-linked-board-campaign'), {
+      ...event,
+      eventType: 'board_game',
+      campaignId: 'heroquest-campaign'
+    }))
+    await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-rpg-board-campaign'), {
+      ...event,
+      eventType: 'tabletop_rpg',
+      campaignId: 'heroquest-campaign'
     }))
     await assertFails(setDoc(doc(organizerDatabase, 'groups', 'group-1', 'events', 'event-missing-campaign'), {
       ...event,

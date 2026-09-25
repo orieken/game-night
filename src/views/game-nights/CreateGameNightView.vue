@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGameNightStore } from '@/stores/gameNightStore'
 import { useAuthStore } from '@/stores/authStore'
@@ -32,6 +32,14 @@ const form = ref({
   isPublic: false
 })
 
+const compatibleCampaigns = computed(() => campaignStore.campaigns.filter((campaign) => {
+  if (campaign.status === 'archived') return false
+  if (form.value.eventType === 'mixed') return true
+  return form.value.eventType === 'board_game'
+    ? campaign.kind === 'campaign_board_game'
+    : campaign.kind === 'tabletop_rpg'
+}))
+
 const handleSubmit = async () => {
   if (!authStore.user || !groupStore.activeGroupId) return
 
@@ -45,7 +53,7 @@ const handleSubmit = async () => {
     location: form.value.location || null,
     hostId: authStore.user.id,
     eventType: form.value.eventType,
-    campaignId: form.value.eventType === 'board_game' ? null : form.value.campaignId || null,
+    campaignId: form.value.campaignId || null,
     status: 'upcoming',
     maxAttendees: form.value.maxAttendees,
     isPublic: form.value.isPublic,
@@ -65,6 +73,10 @@ const handleSubmit = async () => {
 watch(() => groupStore.activeGroupId, (groupId) => {
   if (groupId) void campaignStore.fetchCampaigns(groupId)
 }, { immediate: true })
+
+watch(() => form.value.eventType, () => {
+  if (!compatibleCampaigns.value.some((campaign) => campaign.id === form.value.campaignId)) form.value.campaignId = ''
+})
 </script>
 
 <template>
@@ -89,13 +101,13 @@ watch(() => groupStore.activeGroupId, (groupId) => {
             </label>
           </div>
         </fieldset>
-        <div v-if="form.eventType !== 'board_game'">
+        <div>
           <label class="app-label" for="campaign">Campaign (optional)</label>
           <select id="campaign" v-model="form.campaignId" class="app-field">
             <option value="">No linked campaign</option>
-            <option v-for="campaign in campaignStore.campaigns.filter((item) => item.status !== 'archived')" :key="campaign.id" :value="campaign.id">{{ campaign.name }} · {{ campaign.system }}</option>
+            <option v-for="campaign in compatibleCampaigns" :key="campaign.id" :value="campaign.id">{{ campaign.name }} · {{ campaign.system }}</option>
           </select>
-          <p class="mt-2 text-xs text-slate-400">Link this session to an existing campaign, or create the campaign first.</p>
+          <p class="mt-2 text-xs text-slate-400">{{ form.eventType === 'board_game' ? 'Campaign board games such as HeroQuest can keep their linked progression.' : 'Link this session to an existing compatible campaign, or create the campaign first.' }}</p>
         </div>
         <AppInput
           id="name"

@@ -44,6 +44,7 @@ Firebase replaced the original Supabase proposal. Netlify, rather than Firebase 
 - [x] Add board-game, tabletop RPG, and mixed event types.
 - [x] Add system-flexible campaigns and campaign membership.
 - [x] Add campaign characters plus reusable, copyable vault characters.
+- [x] Add campaign-board-game support with linked games, a HeroQuest preset, and reassignable table-owned heroes.
 - [x] Add adventure logs, private DM notes, and campaign attendance statistics.
 - [x] Add deliberately published, sanitized public story highlights.
 

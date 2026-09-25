@@ -75,7 +75,9 @@ async function addToCampaign() {
   if (!groupId || !userId || !character.value || !isOwner.value || !campaign) return
   const created = await characterStore.createCharacter(groupId, campaign.id, {
     name: character.value.name,
+    ownershipType: 'player',
     playerId: userId,
+    controllerId: userId,
     pronouns: character.value.pronouns,
     status: 'active',
     portraitUrl: character.value.portraitUrl,

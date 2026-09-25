@@ -116,7 +116,7 @@ export const useVaultCharacterStore = defineStore('vaultCharacter', () => {
       publicNotes: source.publicNotes,
       fieldDefinitions: campaign.characterFieldDefinitions.map((field) => ({ ...field, options: [...field.options] })),
       fieldValues: { ...source.fieldValues },
-      source: { type: 'campaign', characterId: source.id, characterName: source.name, ownerId: source.playerId, campaignId: campaign.id },
+      source: { type: 'campaign', characterId: source.id, characterName: source.name, ownerId: source.playerId ?? source.createdById, campaignId: campaign.id },
       createdById: userId
     })
   }
